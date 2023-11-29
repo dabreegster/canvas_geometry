@@ -16,6 +16,8 @@
     return points.map((pt) => `${pt[0]},${pt[1]}`).join(" ");
   }
 
+  // TODO The #key is necessary to show newly rendered elements, but it's buggy
+  // and a hack
   function panZoom(element) {
     svgPanZoom(element, {
       minZoom: 0.1,
@@ -30,34 +32,36 @@
   }
 </script>
 
-<svg use:panZoom>
-  {#each roads as f}
-    <polyline
-      points={gjToSvg(f.geometry.coordinates)}
-      on:click={() => setFocus(f)}
-      class:clicked={clickedFeature == f}
-    />
-  {/each}
-  {#each intersections as f}
-    <circle
-      cx={f.geometry.coordinates[0]}
-      cy={f.geometry.coordinates[1]}
-      r="1"
-      on:click={() => setFocus(f)}
-      class:clicked={clickedFeature == f}
-    />
-  {/each}
-  {#each buildings as f}
-    <polygon
-      points={gjToSvg(f.geometry.coordinates[0])}
-      on:click={() => setFocus(f)}
-      class:clicked={clickedFeature == f}
-    />
-  {/each}
-  {#if $mode.mode == "find-width"}
-    <FindRoadWidth />
-  {/if}
-</svg>
+{#key $mode}
+  <svg use:panZoom>
+    {#each roads as f}
+      <polyline
+        points={gjToSvg(f.geometry.coordinates)}
+        on:click={() => setFocus(f)}
+        class:clicked={clickedFeature == f}
+      />
+    {/each}
+    {#each intersections as f}
+      <circle
+        cx={f.geometry.coordinates[0]}
+        cy={f.geometry.coordinates[1]}
+        r="1"
+        on:click={() => setFocus(f)}
+        class:clicked={clickedFeature == f}
+      />
+    {/each}
+    {#each buildings as f}
+      <polygon
+        points={gjToSvg(f.geometry.coordinates[0])}
+        on:click={() => setFocus(f)}
+        class:clicked={clickedFeature == f}
+      />
+    {/each}
+    {#if $mode.mode == "find-width"}
+      <FindRoadWidth />
+    {/if}
+  </svg>
+{/key}
 
 <style>
   svg {
