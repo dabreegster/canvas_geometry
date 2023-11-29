@@ -14,6 +14,16 @@
           >Find width</button
         >
       </div>
+    {:else if clickedFeature.geometry.type == "Point"}
+      <div>
+        <button
+          on:click={() =>
+            mode.set({
+              mode: "intersection-geometry",
+              intersection: clickedFeature,
+            })}>Intersection geometry</button
+        >
+      </div>
     {/if}
 
     <table>
@@ -25,6 +35,11 @@
     </table>
   {:else if $mode.mode == "find-width"}
     <p>Finding width of this road...</p>
+    <div>
+      <button on:click={() => mode.set({ mode: "neutral" })}>Back</button>
+    </div>
+  {:else if $mode.mode == "intersection-geometry"}
+    <p>Intersection geometry</p>
     <div>
       <button on:click={() => mode.set({ mode: "neutral" })}>Back</button>
     </div>

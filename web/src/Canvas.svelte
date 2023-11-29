@@ -1,6 +1,7 @@
 <script lang="ts">
   import svgPanZoom from "svg-pan-zoom";
   import FindRoadWidth from "./FindRoadWidth.svelte";
+  import IntersectionGeometry from "./IntersectionGeometry.svelte";
   import { mode } from "./stores";
 
   export let gj;
@@ -59,6 +60,8 @@
     {/each}
     {#if $mode.mode == "find-width"}
       <FindRoadWidth />
+    {:else if $mode.mode == "intersection-geometry"}
+      <IntersectionGeometry {gj} />
     {/if}
   </svg>
 {/key}
