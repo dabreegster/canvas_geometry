@@ -7,6 +7,7 @@ use geo::Polygon;
 use geojson::{Feature, GeoJson, Geometry};
 use wasm_bindgen::prelude::*;
 
+mod mercator;
 mod osm;
 mod parse_osm;
 mod scrape;
@@ -15,7 +16,12 @@ static START: Once = Once::new();
 
 #[wasm_bindgen]
 pub struct Diagram {
-    buildings: Vec<(osm::OsmID, Polygon)>,
+    buildings: Vec<Building>,
+}
+
+struct Building {
+    id: osm::OsmID,
+    polygon: Polygon,
 }
 
 #[wasm_bindgen]
@@ -37,9 +43,9 @@ impl Diagram {
     pub fn render(&mut self) -> Result<String, JsValue> {
         let mut features = Vec::new();
 
-        for (id, polygon) in &self.buildings {
-            let mut f = Feature::from(Geometry::from(polygon));
-            f.set_property("id", id.to_string());
+        for b in &self.buildings {
+            let mut f = Feature::from(Geometry::from(&b.polygon));
+            f.set_property("id", b.id.to_string());
             features.push(f);
         }
 

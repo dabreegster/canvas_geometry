@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use geo::{Coord, LineString, Polygon};
+use geo::{Coord, Geometry, GeometryCollection, LineString, MapCoordsInPlace, Polygon};
 
+use crate::mercator::Mercator;
 use crate::osm::OsmID;
 use crate::parse_osm::Element;
-use crate::Diagram;
+use crate::{Building, Diagram};
 
 pub fn scrape_osm(input_bytes: &[u8]) -> Result<Diagram> {
     let mut node_mapping = HashMap::new();
@@ -27,11 +28,26 @@ pub fn scrape_osm(input_bytes: &[u8]) -> Result<Diagram> {
                         ),
                         Vec::new(),
                     );
-                    buildings.push((OsmID::Way(id), polygon));
+                    buildings.push(Building {
+                        id: OsmID::Way(id),
+                        polygon,
+                    });
                 }
             }
             Element::Relation { .. } => {}
         }
     }
+
+    // TODO expensive
+    let collection: GeometryCollection = buildings
+        .iter()
+        .map(|b| Geometry::Polygon(b.polygon.clone()))
+        .collect::<Vec<_>>()
+        .into();
+    let mercator = Mercator::from(collection).unwrap();
+    for b in &mut buildings {
+        b.polygon.map_coords_in_place(|pt| mercator.to_mercator(pt));
+    }
+
     Ok(Diagram { buildings })
 }

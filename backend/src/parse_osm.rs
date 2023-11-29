@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use geo::Point;
+use geo::Coord;
 
 use crate::osm::*;
 
@@ -17,7 +17,7 @@ pub fn parse_osm(input_bytes: &[u8]) -> Result<Vec<Element>> {
 pub enum Element {
     Node {
         id: NodeID,
-        pt: Point,
+        pt: Coord,
         tags: HashMap<String, String>,
     },
     Way {
@@ -49,10 +49,10 @@ fn parse_xml(input_bytes: &[u8]) -> Result<Vec<Element>> {
             }
             "node" => {
                 let id = NodeID(obj.attribute("id").unwrap().parse::<i64>()?);
-                let pt = Point::new(
-                    obj.attribute("lon").unwrap().parse::<f64>()?,
-                    obj.attribute("lat").unwrap().parse::<f64>()?,
-                );
+                let pt = Coord {
+                    x: obj.attribute("lon").unwrap().parse::<f64>()?,
+                    y: obj.attribute("lat").unwrap().parse::<f64>()?,
+                };
                 let tags = read_tags(obj);
                 elements.push(Element::Node { id, pt, tags });
             }
