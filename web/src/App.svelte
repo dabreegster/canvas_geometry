@@ -1,6 +1,7 @@
 <script lang="ts">
   import init, { Diagram } from "backend";
   import { onMount } from "svelte";
+  import Canvas from "./Canvas.svelte";
   import Layout from "./Layout.svelte";
   import Loading from "./Loading.svelte";
 
@@ -32,7 +33,7 @@
   </div>
   <div slot="main" style="position:relative; width: 100%; height: 100vh;">
     {#if diagram}
-      <pre>{diagram.render()}</pre>
+      <Canvas gj={JSON.parse(diagram.render())} />
     {/if}
   </div>
 </Layout>
