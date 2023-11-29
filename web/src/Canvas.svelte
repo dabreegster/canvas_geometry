@@ -1,5 +1,7 @@
 <script lang="ts">
   import svgPanZoom from "svg-pan-zoom";
+  import FindRoadWidth from "./FindRoadWidth.svelte";
+  import { mode } from "./stores";
 
   export let gj;
   // TODO Hovered would be nicer
@@ -20,23 +22,31 @@
       zoomScaleSensitivity: 0.5,
     });
   }
+
+  function setFocus(f) {
+    mode.set({ mode: "neutral" });
+    clickedFeature = f;
+  }
 </script>
 
 <svg use:panZoom>
   {#each roads as f}
     <polyline
       points={gjToSvg(f.geometry.coordinates)}
-      on:click={() => (clickedFeature = f)}
+      on:click={() => setFocus(f)}
       class:clicked={clickedFeature == f}
     />
   {/each}
   {#each buildings as f}
     <polygon
       points={gjToSvg(f.geometry.coordinates[0])}
-      on:click={() => (clickedFeature = f)}
+      on:click={() => setFocus(f)}
       class:clicked={clickedFeature == f}
     />
   {/each}
+  {#if $mode.mode == "find-width"}
+    <FindRoadWidth />
+  {/if}
 </svg>
 
 <style>

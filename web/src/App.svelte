@@ -5,7 +5,7 @@
   import Canvas from "./Canvas.svelte";
   import Layout from "./Layout.svelte";
   import Loading from "./Loading.svelte";
-  import PropertiesTable from "./PropertiesTable.svelte";
+  import Sidebar from "./Sidebar.svelte";
 
   onMount(async () => {
     await init();
@@ -42,9 +42,7 @@
     <label>
       <input bind:this={fileInput} on:change={loadFile} type="file" />
     </label>
-    {#if clickedFeature}
-      <PropertiesTable tags={clickedFeature.properties} />
-    {/if}
+    <Sidebar {clickedFeature} />
   </div>
   <div slot="main" style="position:relative; width: 100%; height: 100vh;">
     {#if diagram}
