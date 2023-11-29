@@ -16,12 +16,25 @@
 
   // TODO The #key is necessary to show newly rendered elements, but it's buggy
   // and a hack
+  let prevZoom = null;
+  let prevPan = null;
   function panZoom(element) {
-    svgPanZoom(element, {
+    let state = svgPanZoom(element, {
       minZoom: 0.1,
       maxZoom: 50,
       zoomScaleSensitivity: 0.5,
     });
+    if (prevZoom) {
+      state.zoom(prevZoom);
+      state.pan(prevPan);
+    }
+    return {
+      update() {},
+      destroy() {
+        prevZoom = state.getZoom();
+        prevPan = state.getPan();
+      },
+    };
   }
 
   function setFocus(f) {
