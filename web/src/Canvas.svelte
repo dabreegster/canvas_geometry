@@ -9,6 +9,7 @@
   export let clickedFeature;
 
   let roads = gj.features.filter((f) => f.geometry.type == "LineString");
+  let intersections = gj.features.filter((f) => f.geometry.type == "Point");
   let buildings = gj.features.filter((f) => f.geometry.type == "Polygon");
 
   function gjToSvg(points) {
@@ -33,6 +34,15 @@
   {#each roads as f}
     <polyline
       points={gjToSvg(f.geometry.coordinates)}
+      on:click={() => setFocus(f)}
+      class:clicked={clickedFeature == f}
+    />
+  {/each}
+  {#each intersections as f}
+    <circle
+      cx={f.geometry.coordinates[0]}
+      cy={f.geometry.coordinates[1]}
+      r="1"
       on:click={() => setFocus(f)}
       class:clicked={clickedFeature == f}
     />
@@ -70,6 +80,13 @@
     stroke: black;
   }
   polygon:hover {
+    fill: blue;
+  }
+
+  circle {
+    fill: red;
+  }
+  circle:hover {
     fill: blue;
   }
 

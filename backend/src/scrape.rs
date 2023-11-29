@@ -1,12 +1,12 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use anyhow::Result;
-use geo::{Coord, Geometry, GeometryCollection, LineString, MapCoordsInPlace, Polygon};
+use geo::{Coord, Geometry, GeometryCollection, LineString, MapCoordsInPlace, Point, Polygon};
 
 use crate::mercator::Mercator;
 use crate::osm::{NodeID, OsmID, WayID};
 use crate::parse_osm::Element;
-use crate::{Building, Diagram, Road};
+use crate::{Building, Intersection, IntersectionID, MapModel, Road, RoadID};
 
 struct Way {
     id: WayID,
@@ -14,7 +14,7 @@ struct Way {
     tags: HashMap<String, String>,
 }
 
-pub fn scrape_osm(input_bytes: &[u8]) -> Result<Diagram> {
+pub fn scrape_osm(input_bytes: &[u8]) -> Result<MapModel> {
     let mut node_mapping = HashMap::new();
     let mut highways = Vec::new();
     let mut buildings = Vec::new();
@@ -48,7 +48,7 @@ pub fn scrape_osm(input_bytes: &[u8]) -> Result<Diagram> {
         }
     }
 
-    let mut roads = split_edges(&node_mapping, highways);
+    let (mut roads, mut intersections) = split_edges(&node_mapping, highways);
 
     // TODO expensive
     let collection: GeometryCollection = buildings
@@ -66,14 +66,24 @@ pub fn scrape_osm(input_bytes: &[u8]) -> Result<Diagram> {
         r.linestring
             .map_coords_in_place(|pt| mercator.to_mercator(pt));
     }
+    for i in &mut intersections {
+        i.point.map_coords_in_place(|pt| mercator.to_mercator(pt));
+    }
     for b in &mut buildings {
         b.polygon.map_coords_in_place(|pt| mercator.to_mercator(pt));
     }
 
-    Ok(Diagram { roads, buildings })
+    Ok(MapModel {
+        roads,
+        intersections,
+        buildings,
+    })
 }
 
-fn split_edges(node_mapping: &HashMap<NodeID, Coord>, ways: Vec<Way>) -> Vec<Road> {
+fn split_edges(
+    node_mapping: &HashMap<NodeID, Coord>,
+    ways: Vec<Way>,
+) -> (Vec<Road>, Vec<Intersection>) {
     // Count how many ways reference each node
     let mut node_counter: HashMap<NodeID, usize> = HashMap::new();
     for way in &ways {
@@ -83,7 +93,7 @@ fn split_edges(node_mapping: &HashMap<NodeID, Coord>, ways: Vec<Way>) -> Vec<Roa
     }
 
     // Split each way into edges
-    let mut intersections = HashMap::new();
+    let mut intersections = BTreeMap::new();
     let mut roads = Vec::new();
     for way in ways {
         let mut node1 = way.node_ids[0];
@@ -97,9 +107,24 @@ fn split_edges(node_mapping: &HashMap<NodeID, Coord>, ways: Vec<Way>) -> Vec<Roa
             let is_endpoint =
                 idx == 0 || idx == num_nodes - 1 || *node_counter.get(&node).unwrap() > 1;
             if is_endpoint && pts.len() > 1 {
-                intersections.insert(node1, pts[0]);
-                intersections.insert(node, *pts.last().unwrap());
+                let road_id = RoadID(roads.len());
+
+                for (n, point) in [(node1, pts[0]), (node, *pts.last().unwrap())] {
+                    let next_id = IntersectionID(intersections.len());
+                    intersections
+                        .entry(n)
+                        .or_insert_with(|| Intersection {
+                            id: next_id,
+                            node: n,
+                            point: Point(point),
+                            roads: Vec::new(),
+                        })
+                        .roads
+                        .push(road_id);
+                }
+
                 roads.push(Road {
+                    id: road_id,
                     way: way.id,
                     node1,
                     node2: node,
@@ -114,6 +139,7 @@ fn split_edges(node_mapping: &HashMap<NodeID, Coord>, ways: Vec<Way>) -> Vec<Roa
         }
     }
 
-    // Ignore intersections for now
-    roads
+    let intersections = intersections.into_values().collect();
+
+    (roads, intersections)
 }

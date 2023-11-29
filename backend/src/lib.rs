@@ -4,7 +4,7 @@ extern crate log;
 use std::collections::HashMap;
 use std::sync::Once;
 
-use geo::{LineString, Polygon};
+use geo::{LineString, Point, Polygon};
 use geojson::GeoJson;
 use wasm_bindgen::prelude::*;
 
@@ -17,17 +17,31 @@ mod scrape;
 static START: Once = Once::new();
 
 #[wasm_bindgen]
-pub struct Diagram {
+pub struct MapModel {
     roads: Vec<Road>,
+    intersections: Vec<Intersection>,
     buildings: Vec<Building>,
 }
 
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub struct RoadID(pub usize);
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub struct IntersectionID(pub usize);
+
 struct Road {
+    id: RoadID,
     way: osm::WayID,
     node1: osm::NodeID,
     node2: osm::NodeID,
     linestring: LineString,
     tags: HashMap<String, String>,
+}
+
+struct Intersection {
+    id: IntersectionID,
+    node: osm::NodeID,
+    point: Point,
+    roads: Vec<RoadID>,
 }
 
 struct Building {
@@ -37,10 +51,10 @@ struct Building {
 }
 
 #[wasm_bindgen]
-impl Diagram {
+impl MapModel {
     /// Call with bytes of an osm.pbf or osm.xml string
     #[wasm_bindgen(constructor)]
-    pub fn new(input_bytes: &[u8]) -> Result<Diagram, JsValue> {
+    pub fn new(input_bytes: &[u8]) -> Result<MapModel, JsValue> {
         // Panics shouldn't happen, but if they do, console.log them.
         console_error_panic_hook::set_once();
         START.call_once(|| {
@@ -57,6 +71,9 @@ impl Diagram {
 
         for r in &self.roads {
             features.push(r.to_geojson());
+        }
+        for i in &self.intersections {
+            features.push(i.to_geojson());
         }
         for b in &self.buildings {
             features.push(b.to_geojson());

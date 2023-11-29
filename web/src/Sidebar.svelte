@@ -39,5 +39,6 @@
 
   td {
     border: solid;
+    padding: 8px;
   }
 </style>

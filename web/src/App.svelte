@@ -1,5 +1,5 @@
 <script lang="ts">
-  import init, { Diagram } from "backend";
+  import init, { MapModel } from "backend";
   import { onMount } from "svelte";
   import xmlUrl from "../assets/input.osm?url";
   import Canvas from "./Canvas.svelte";
@@ -13,14 +13,14 @@
       loading = true;
       let resp = await fetch(xmlUrl);
       let buffer = await resp.arrayBuffer();
-      diagram = new Diagram(new Uint8Array(buffer));
+      map = new MapModel(new Uint8Array(buffer));
     } catch (err) {
       window.alert(`Couldn't open from URL ${xmlUrl}: ${err}`);
     }
     loading = false;
   });
 
-  let diagram: Diagram | undefined = undefined;
+  let map: MapModel | undefined = undefined;
   let loading = false;
   let clickedFeature = null;
 
@@ -29,7 +29,7 @@
     try {
       loading = true;
       let buffer = await fileInput.files![0].arrayBuffer();
-      diagram = new Diagram(new Uint8Array(buffer));
+      map = new MapModel(new Uint8Array(buffer));
     } catch (err) {
       window.alert(`Couldn't open this file: ${err}`);
     }
@@ -45,8 +45,8 @@
     <Sidebar {clickedFeature} />
   </div>
   <div slot="main" style="position:relative; width: 100%; height: 100vh;">
-    {#if diagram}
-      <Canvas gj={JSON.parse(diagram.render())} bind:clickedFeature />
+    {#if map}
+      <Canvas gj={JSON.parse(map.render())} bind:clickedFeature />
     {/if}
   </div>
 </Layout>

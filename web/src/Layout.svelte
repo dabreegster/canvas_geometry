@@ -23,6 +23,8 @@
     height: 100vh;
     overflow: scroll;
     padding: 8px;
+    background: black;
+    color: white;
   }
   .main {
     width: 75%;
