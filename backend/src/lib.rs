@@ -3,15 +3,20 @@ extern crate log;
 
 use std::sync::Once;
 
-use geo::{point, polygon, Geometry, GeometryCollection};
-use geojson::FeatureCollection;
-use std::iter::FromIterator;
+use geo::Polygon;
+use geojson::{Feature, GeoJson, Geometry};
 use wasm_bindgen::prelude::*;
+
+mod osm;
+mod parse_osm;
+mod scrape;
 
 static START: Once = Once::new();
 
 #[wasm_bindgen]
-pub struct Diagram {}
+pub struct Diagram {
+    buildings: Vec<(osm::OsmID, Polygon)>,
+}
 
 #[wasm_bindgen]
 impl Diagram {
@@ -24,29 +29,22 @@ impl Diagram {
             console_log::init_with_level(log::Level::Info).unwrap();
         });
 
-        info!("Got {} bytes", input_bytes.len());
-
-        Ok(Diagram {})
+        scrape::scrape_osm(input_bytes).map_err(err_to_js)
     }
 
     /// Returns a GeoJSON string
     #[wasm_bindgen()]
     pub fn render(&mut self) -> Result<String, JsValue> {
-        // TODO Dummy output
-        let poly: Geometry<f64> = polygon![
-            (x: -111., y: 45.),
-            (x: -111., y: 41.),
-            (x: -104., y: 41.),
-            (x: -104., y: 45.),
-        ]
-        .into();
+        let mut features = Vec::new();
 
-        let point: Geometry<f64> = point!(x: 1.0, y: 2.0).into();
+        for (id, polygon) in &self.buildings {
+            let mut f = Feature::from(Geometry::from(polygon));
+            f.set_property("id", id.to_string());
+            features.push(f);
+        }
 
-        let geometry_collection = GeometryCollection::from_iter(vec![poly, point]);
-        let feature_collection = FeatureCollection::from(&geometry_collection);
-
-        let out = serde_json::to_string(&feature_collection).map_err(err_to_js)?;
+        let gj = GeoJson::from(features);
+        let out = serde_json::to_string(&gj).map_err(err_to_js)?;
         Ok(out)
     }
 }

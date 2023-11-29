@@ -31,7 +31,9 @@
     </label>
   </div>
   <div slot="main" style="position:relative; width: 100%; height: 100vh;">
-    <p>Canvas goes here</p>
+    {#if diagram}
+      <pre>{diagram.render()}</pre>
+    {/if}
   </div>
 </Layout>
 <Loading {loading} />
