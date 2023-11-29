@@ -3,12 +3,13 @@ extern crate log;
 
 use std::sync::Once;
 
-use geo::Polygon;
-use geojson::{Feature, GeoJson, Geometry};
+use geo::{LineString, Polygon};
+use geojson::GeoJson;
 use wasm_bindgen::prelude::*;
 
 mod mercator;
 mod osm;
+mod output;
 mod parse_osm;
 mod scrape;
 
@@ -16,7 +17,15 @@ static START: Once = Once::new();
 
 #[wasm_bindgen]
 pub struct Diagram {
+    roads: Vec<Road>,
     buildings: Vec<Building>,
+}
+
+struct Road {
+    way: osm::WayID,
+    node1: osm::NodeID,
+    node2: osm::NodeID,
+    linestring: LineString,
 }
 
 struct Building {
@@ -43,10 +52,11 @@ impl Diagram {
     pub fn render(&mut self) -> Result<String, JsValue> {
         let mut features = Vec::new();
 
+        for r in &self.roads {
+            features.push(r.to_geojson());
+        }
         for b in &self.buildings {
-            let mut f = Feature::from(Geometry::from(&b.polygon));
-            f.set_property("id", b.id.to_string());
-            features.push(f);
+            features.push(b.to_geojson());
         }
 
         let gj = GeoJson::from(features);

@@ -1,12 +1,22 @@
 <script lang="ts">
   import init, { Diagram } from "backend";
   import { onMount } from "svelte";
+  import xmlUrl from "../assets/input.osm?url";
   import Canvas from "./Canvas.svelte";
   import Layout from "./Layout.svelte";
   import Loading from "./Loading.svelte";
 
   onMount(async () => {
     await init();
+    try {
+      loading = true;
+      let resp = await fetch(xmlUrl);
+      let buffer = await resp.arrayBuffer();
+      diagram = new Diagram(new Uint8Array(buffer));
+    } catch (err) {
+      window.alert(`Couldn't open from URL ${xmlUrl}: ${err}`);
+    }
+    loading = false;
   });
 
   let diagram: Diagram | undefined = undefined;

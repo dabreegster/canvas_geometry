@@ -3,12 +3,11 @@
 
   export let gj;
 
-  function gjPolygonToSvg(f) {
-    let points = "";
-    for (let pt of f.geometry.coordinates[0]) {
-      points += `${pt[0]},${pt[1]} `;
-    }
-    return points;
+  let roads = gj.features.filter((f) => f.geometry.type == "LineString");
+  let buildings = gj.features.filter((f) => f.geometry.type == "Polygon");
+
+  function gjToSvg(points) {
+    return points.map((pt) => `${pt[0]},${pt[1]}`).join(" ");
   }
 
   function panZoom(element) {
@@ -21,8 +20,11 @@
 </script>
 
 <svg use:panZoom>
-  {#each gj.features as f}
-    <polygon points={gjPolygonToSvg(f)} />
+  {#each roads as f}
+    <polyline points={gjToSvg(f.geometry.coordinates)} />
+  {/each}
+  {#each buildings as f}
+    <polygon points={gjToSvg(f.geometry.coordinates[0])} />
   {/each}
 </svg>
 
@@ -33,11 +35,19 @@
     background-color: grey;
   }
 
+  polyline {
+    fill: none;
+    stroke: black;
+    stroke-width: 1;
+  }
+  polyline:hover {
+    stroke: blue;
+  }
+
   polygon {
     fill: red;
     stroke: black;
   }
-
   polygon:hover {
     fill: blue;
   }
