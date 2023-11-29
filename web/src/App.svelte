@@ -17,10 +17,10 @@
       loading = true;
       let buffer = await fileInput.files![0].arrayBuffer();
       diagram = new Diagram(new Uint8Array(buffer));
-      loading = false;
     } catch (err) {
       window.alert(`Couldn't open this file: ${err}`);
     }
+    loading = false;
   }
 </script>
 
