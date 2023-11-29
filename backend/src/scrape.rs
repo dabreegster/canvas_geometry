@@ -74,6 +74,7 @@ pub fn scrape_osm(input_bytes: &[u8]) -> Result<MapModel> {
     }
 
     Ok(MapModel {
+        mercator,
         roads,
         intersections,
         buildings,

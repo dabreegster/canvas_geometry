@@ -2,6 +2,7 @@
   import svgPanZoom from "svg-pan-zoom";
   import FindRoadWidth from "./FindRoadWidth.svelte";
   import IntersectionGeometry from "./IntersectionGeometry.svelte";
+  import { gjToSvg } from "./math";
   import { mode } from "./stores";
 
   export let gj;
@@ -12,10 +13,6 @@
   let roads = gj.features.filter((f) => f.geometry.type == "LineString");
   let intersections = gj.features.filter((f) => f.geometry.type == "Point");
   let buildings = gj.features.filter((f) => f.geometry.type == "Polygon");
-
-  function gjToSvg(points) {
-    return points.map((pt) => `${pt[0]},${pt[1]}`).join(" ");
-  }
 
   // TODO The #key is necessary to show newly rendered elements, but it's buggy
   // and a hack
@@ -59,7 +56,7 @@
       />
     {/each}
     {#if $mode.mode == "find-width"}
-      <FindRoadWidth />
+      <FindRoadWidth {gj} />
     {:else if $mode.mode == "intersection-geometry"}
       <IntersectionGeometry {gj} />
     {/if}

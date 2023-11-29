@@ -1,21 +1,19 @@
 <script lang="ts">
   import { buffer } from "@turf/turf";
+  import { gjToSvg, mercatorToSpherical, sphericalToMercator } from "./math";
   import { mode } from "./stores";
 
   export let gj;
 
-  let roads = gj.features.filter(
-    (f) =>
-      f.geometry.type == "LineString" &&
-      f.properties.id in $mode.intersection.properties.roads
-  );
+  let roads = gj.features
+    .filter(
+      (f) =>
+        f.geometry.type == "LineString" &&
+        f.properties.id in $mode.intersection.properties.roads
+    )
+    .map((f) => mercatorToSpherical(gj, f));
 
-  let buffered = roads.map((f) => buffer(f, 0.1));
-  console.log(buffered);
-
-  function gjToSvg(points) {
-    return points.map((pt) => `${pt[0]},${pt[1]}`).join(" ");
-  }
+  let buffered = roads.map((f) => sphericalToMercator(gj, buffer(f, 0.005)));
 </script>
 
 {#each buffered as f}

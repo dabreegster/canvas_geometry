@@ -1,22 +1,23 @@
 <script lang="ts">
   import { along, length } from "@turf/turf";
+  import { mercatorToSpherical, sphericalToMercator } from "./math";
   import { mode } from "./stores";
 
-  let linestring = $mode.road;
-  let pointsOnLine = findPointsOnLine(1000.0);
+  export let gj;
+
+  let linestring = mercatorToSpherical(gj, $mode.road);
+  let pointsOnLine = findPointsOnLine(1.0);
 
   // For each point, create a perpendicular projection left and right
 
   function findPointsOnLine(stepSizeMeters: number) {
-    // TODO ahhh turf assumes WGS84, but we've already projected to mercator and are in meters.
+    let stepSizeKm = stepSizeMeters / 1000.0;
     let len = length(linestring);
-    //console.log(len);
     let pts = [];
-    for (let x = 0.0; x < len; x += stepSizeMeters) {
-      pts.push(along(linestring, x));
+    for (let x = 0.0; x < len; x += stepSizeKm) {
+      pts.push(sphericalToMercator(gj, along(linestring, x)));
     }
     // TODO Imprecise towards the end, so don't forget the last point
-    //console.log(pts);
     return pts;
   }
 </script>
@@ -25,7 +26,7 @@
   <circle
     cx={pt.geometry.coordinates[0]}
     cy={pt.geometry.coordinates[1]}
-    r="3"
+    r="0.2"
   />
 {/each}
 

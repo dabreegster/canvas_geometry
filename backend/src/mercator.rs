@@ -1,4 +1,5 @@
 use geo::{BoundingRect, Coord, HaversineLength, LineString, Rect};
+use geojson::JsonObject;
 
 /// Projects WGS84 points onto a Euclidean plane, using a Mercator projection. The top-left is (0,
 /// 0) and grows to the right and down (screen-drawing order, not Cartesian), with units of meters.
@@ -37,5 +38,19 @@ impl Mercator {
         let y = self.height
             - self.height * (pt.y - self.wgs84_bounds.min().y) / self.wgs84_bounds.height();
         Coord { x, y }
+    }
+
+    pub fn to_json(&self) -> JsonObject {
+        let mut obj = JsonObject::new();
+        obj.insert("width".to_string(), self.width.into());
+        obj.insert("height".to_string(), self.height.into());
+        obj.insert("x1".to_string(), self.wgs84_bounds.min().x.into());
+        obj.insert("y1".to_string(), self.wgs84_bounds.min().y.into());
+        obj.insert("x2".to_string(), self.wgs84_bounds.max().x.into());
+        obj.insert("y2".to_string(), self.wgs84_bounds.max().y.into());
+
+        let mut wrapper = JsonObject::new();
+        wrapper.insert("mercator".to_string(), obj.into());
+        wrapper
     }
 }
