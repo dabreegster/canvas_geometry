@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate log;
 
+use std::collections::HashMap;
 use std::sync::Once;
 
 use geo::{LineString, Polygon};
@@ -26,11 +27,13 @@ struct Road {
     node1: osm::NodeID,
     node2: osm::NodeID,
     linestring: LineString,
+    tags: HashMap<String, String>,
 }
 
 struct Building {
     id: osm::OsmID,
     polygon: Polygon,
+    tags: HashMap<String, String>,
 }
 
 #[wasm_bindgen]

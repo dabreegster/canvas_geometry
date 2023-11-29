@@ -5,6 +5,7 @@
   import Canvas from "./Canvas.svelte";
   import Layout from "./Layout.svelte";
   import Loading from "./Loading.svelte";
+  import PropertiesTable from "./PropertiesTable.svelte";
 
   onMount(async () => {
     await init();
@@ -21,6 +22,7 @@
 
   let diagram: Diagram | undefined = undefined;
   let loading = false;
+  let clickedFeature = null;
 
   let fileInput: HTMLInputElement;
   async function loadFile(e: Event) {
@@ -40,10 +42,13 @@
     <label>
       <input bind:this={fileInput} on:change={loadFile} type="file" />
     </label>
+    {#if clickedFeature}
+      <PropertiesTable tags={clickedFeature.properties} />
+    {/if}
   </div>
   <div slot="main" style="position:relative; width: 100%; height: 100vh;">
     {#if diagram}
-      <Canvas gj={JSON.parse(diagram.render())} />
+      <Canvas gj={JSON.parse(diagram.render())} bind:clickedFeature />
     {/if}
   </div>
 </Layout>

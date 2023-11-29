@@ -2,6 +2,9 @@
   import svgPanZoom from "svg-pan-zoom";
 
   export let gj;
+  // TODO Hovered would be nicer
+  // TODO Clicking background show unset this
+  export let clickedFeature;
 
   let roads = gj.features.filter((f) => f.geometry.type == "LineString");
   let buildings = gj.features.filter((f) => f.geometry.type == "Polygon");
@@ -21,10 +24,18 @@
 
 <svg use:panZoom>
   {#each roads as f}
-    <polyline points={gjToSvg(f.geometry.coordinates)} />
+    <polyline
+      points={gjToSvg(f.geometry.coordinates)}
+      on:click={() => (clickedFeature = f)}
+      class:clicked={clickedFeature == f}
+    />
   {/each}
   {#each buildings as f}
-    <polygon points={gjToSvg(f.geometry.coordinates[0])} />
+    <polygon
+      points={gjToSvg(f.geometry.coordinates[0])}
+      on:click={() => (clickedFeature = f)}
+      class:clicked={clickedFeature == f}
+    />
   {/each}
 </svg>
 
@@ -50,5 +61,10 @@
   }
   polygon:hover {
     fill: blue;
+  }
+
+  .clicked {
+    stroke: yellow;
+    stroke-width: 3;
   }
 </style>

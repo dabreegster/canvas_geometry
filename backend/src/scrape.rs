@@ -11,6 +11,7 @@ use crate::{Building, Diagram, Road};
 struct Way {
     id: WayID,
     node_ids: Vec<NodeID>,
+    tags: HashMap<String, String>,
 }
 
 pub fn scrape_osm(input_bytes: &[u8]) -> Result<Diagram> {
@@ -24,7 +25,7 @@ pub fn scrape_osm(input_bytes: &[u8]) -> Result<Diagram> {
             }
             Element::Way { id, node_ids, tags } => {
                 if tags.contains_key("highway") {
-                    highways.push(Way { id, node_ids });
+                    highways.push(Way { id, node_ids, tags });
                 } else if tags.contains_key("building") {
                     // geo closes the polygon for us
                     let polygon = Polygon::new(
@@ -39,6 +40,7 @@ pub fn scrape_osm(input_bytes: &[u8]) -> Result<Diagram> {
                     buildings.push(Building {
                         id: OsmID::Way(id),
                         polygon,
+                        tags,
                     });
                 }
             }
@@ -102,6 +104,7 @@ fn split_edges(node_mapping: &HashMap<NodeID, Coord>, ways: Vec<Way>) -> Vec<Roa
                     node1,
                     node2: node,
                     linestring: LineString::new(std::mem::take(&mut pts)),
+                    tags: way.tags.clone(),
                 });
 
                 // Start the next edge
