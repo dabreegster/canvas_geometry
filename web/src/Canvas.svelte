@@ -1,4 +1,6 @@
 <script lang="ts">
+  import svgPanZoom from "svg-pan-zoom";
+
   export let gj;
 
   function gjPolygonToSvg(f) {
@@ -8,9 +10,17 @@
     }
     return points;
   }
+
+  function panZoom(element) {
+    svgPanZoom(element, {
+      minZoom: 0.1,
+      maxZoom: 50,
+      zoomScaleSensitivity: 0.5,
+    });
+  }
 </script>
 
-<svg>
+<svg use:panZoom>
   {#each gj.features as f}
     <polygon points={gjPolygonToSvg(f)} />
   {/each}

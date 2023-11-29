@@ -25,6 +25,7 @@
     "vite-plugin-wasm-pack": "0.1.11"
   },
   "dependencies": {
-    "@turf/turf": "^6.5.0"
+    "@turf/turf": "^6.5.0",
+    "svg-pan-zoom": "^3.6.1"
   }
 }
