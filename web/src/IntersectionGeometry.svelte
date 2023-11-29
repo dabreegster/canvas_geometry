@@ -5,11 +5,21 @@
 
   export let gj;
 
+  // TODO Offline and losing my sanity
+  function has(list, x) {
+    for (let y of list) {
+      if (x == y) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   let roads = gj.features
     .filter(
       (f) =>
         f.geometry.type == "LineString" &&
-        f.properties.id in $mode.intersection.properties.roads
+        has($mode.intersection.properties.roads, f.properties.id)
     )
     .map((f) => mercatorToSpherical(gj, f));
 
