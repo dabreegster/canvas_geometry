@@ -38,8 +38,14 @@
   }
 
   function setFocus(f) {
-    mode.set({ mode: "neutral" });
     clickedFeature = f;
+    if (clickedFeature.geometry.type == "LineString") {
+      mode.set({ mode: "find-width", road: clickedFeature });
+    } else if (clickedFeature.geometry.type == "Point") {
+      mode.set({ mode: "intersection-geometry", intersection: clickedFeature });
+    } else if (clickedFeature.geometry.type == "Polygon") {
+      mode.set({ mode: "neutral" });
+    }
   }
 </script>
 
