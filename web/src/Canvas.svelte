@@ -75,7 +75,7 @@
       />
     {/each}
     {#if $mode.mode == "find-width"}
-      <FindRoadWidth {gj} />
+      <FindRoadWidth />
     {:else if $mode.mode == "intersection-geometry"}
       <IntersectionGeometry {gj} />
     {/if}

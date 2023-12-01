@@ -6,6 +6,7 @@
   import Layout from "./Layout.svelte";
   import Loading from "./Loading.svelte";
   import Sidebar from "./Sidebar.svelte";
+  import { map } from "./stores";
 
   onMount(async () => {
     await init();
@@ -13,14 +14,13 @@
       loading = true;
       let resp = await fetch(xmlUrl);
       let buffer = await resp.arrayBuffer();
-      map = new MapModel(new Uint8Array(buffer));
+      $map = new MapModel(new Uint8Array(buffer));
     } catch (err) {
       window.alert(`Couldn't open from URL ${xmlUrl}: ${err}`);
     }
     loading = false;
   });
 
-  let map: MapModel | undefined = undefined;
   let loading = false;
   let clickedFeature = null;
 
@@ -29,7 +29,7 @@
     try {
       loading = true;
       let buffer = await fileInput.files![0].arrayBuffer();
-      map = new MapModel(new Uint8Array(buffer));
+      $map = new MapModel(new Uint8Array(buffer));
     } catch (err) {
       window.alert(`Couldn't open this file: ${err}`);
     }
@@ -45,8 +45,8 @@
     <Sidebar {clickedFeature} />
   </div>
   <div slot="main" style="position:relative; width: 100%; height: 100vh;">
-    {#if map}
-      <Canvas gj={JSON.parse(map.render())} bind:clickedFeature />
+    {#if $map}
+      <Canvas gj={JSON.parse($map.render())} bind:clickedFeature />
     {/if}
   </div>
 </Layout>

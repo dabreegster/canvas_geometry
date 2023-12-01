@@ -8,6 +8,7 @@ use geo::{LineString, Point, Polygon};
 use geojson::FeatureCollection;
 use wasm_bindgen::prelude::*;
 
+mod find_road_width;
 mod mercator;
 mod osm;
 mod output;
@@ -86,6 +87,13 @@ impl MapModel {
             bbox: None,
         };
         let out = serde_json::to_string(&gj).map_err(err_to_js)?;
+        Ok(out)
+    }
+
+    #[wasm_bindgen(js_name = findRoadWidth)]
+    pub fn find_road_width(&self, r: usize) -> Result<String, JsValue> {
+        let obj = find_road_width::find_road_width(self, RoadID(r));
+        let out = serde_json::to_string(&obj).map_err(err_to_js)?;
         Ok(out)
     }
 }
