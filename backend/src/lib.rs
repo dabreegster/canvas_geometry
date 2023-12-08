@@ -10,9 +10,7 @@ use wasm_bindgen::prelude::*;
 
 mod find_road_width;
 mod mercator;
-mod osm;
 mod output;
-mod parse_osm;
 mod scrape;
 
 static START: Once = Once::new();
@@ -32,22 +30,22 @@ pub struct IntersectionID(pub usize);
 
 struct Road {
     id: RoadID,
-    way: osm::WayID,
-    node1: osm::NodeID,
-    node2: osm::NodeID,
+    way: osm_reader::WayID,
+    node1: osm_reader::NodeID,
+    node2: osm_reader::NodeID,
     linestring: LineString,
     tags: HashMap<String, String>,
 }
 
 struct Intersection {
     id: IntersectionID,
-    node: osm::NodeID,
+    node: osm_reader::NodeID,
     point: Point,
     roads: Vec<RoadID>,
 }
 
 struct Building {
-    id: osm::OsmID,
+    id: osm_reader::OsmID,
     polygon: Polygon,
     tags: HashMap<String, String>,
 }

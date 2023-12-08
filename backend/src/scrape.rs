@@ -2,10 +2,9 @@ use std::collections::{BTreeMap, HashMap};
 
 use anyhow::Result;
 use geo::{Coord, Geometry, GeometryCollection, LineString, MapCoordsInPlace, Point, Polygon};
+use osm_reader::{Element, NodeID, OsmID, WayID};
 
 use crate::mercator::Mercator;
-use crate::osm::{NodeID, OsmID, WayID};
-use crate::parse_osm::Element;
 use crate::{Building, Intersection, IntersectionID, MapModel, Road, RoadID};
 
 struct Way {
@@ -18,10 +17,10 @@ pub fn scrape_osm(input_bytes: &[u8]) -> Result<MapModel> {
     let mut node_mapping = HashMap::new();
     let mut highways = Vec::new();
     let mut buildings = Vec::new();
-    for elem in crate::parse_osm::parse_osm(input_bytes)? {
+    for elem in osm_reader::parse(input_bytes)? {
         match elem {
-            Element::Node { id, pt, .. } => {
-                node_mapping.insert(id, pt);
+            Element::Node { id, lon, lat, .. } => {
+                node_mapping.insert(id, Coord { x: lon, y: lat });
             }
             Element::Way { id, node_ids, tags } => {
                 if tags.contains_key("highway") {
