@@ -17,35 +17,33 @@ pub fn scrape_osm(input_bytes: &[u8]) -> Result<MapModel> {
     let mut node_mapping = HashMap::new();
     let mut highways = Vec::new();
     let mut buildings = Vec::new();
-    for elem in osm_reader::parse(input_bytes)? {
-        match elem {
-            Element::Node { id, lon, lat, .. } => {
-                node_mapping.insert(id, Coord { x: lon, y: lat });
-            }
-            Element::Way { id, node_ids, tags } => {
-                if tags.contains_key("highway") {
-                    highways.push(Way { id, node_ids, tags });
-                } else if tags.contains_key("building") {
-                    // geo closes the polygon for us
-                    let polygon = Polygon::new(
-                        LineString::new(
-                            node_ids
-                                .into_iter()
-                                .map(|id| Coord::from(node_mapping[&id]))
-                                .collect(),
-                        ),
-                        Vec::new(),
-                    );
-                    buildings.push(Building {
-                        id: OsmID::Way(id),
-                        polygon,
-                        tags,
-                    });
-                }
-            }
-            Element::Relation { .. } => {}
+    osm_reader::parse(input_bytes, |elem| match elem {
+        Element::Node { id, lon, lat, .. } => {
+            node_mapping.insert(id, Coord { x: lon, y: lat });
         }
-    }
+        Element::Way { id, node_ids, tags } => {
+            if tags.contains_key("highway") {
+                highways.push(Way { id, node_ids, tags });
+            } else if tags.contains_key("building") {
+                // geo closes the polygon for us
+                let polygon = Polygon::new(
+                    LineString::new(
+                        node_ids
+                            .into_iter()
+                            .map(|id| Coord::from(node_mapping[&id]))
+                            .collect(),
+                    ),
+                    Vec::new(),
+                );
+                buildings.push(Building {
+                    id: OsmID::Way(id),
+                    polygon,
+                    tags,
+                });
+            }
+        }
+        Element::Relation { .. } => {}
+    })?;
 
     let (mut roads, mut intersections) = split_edges(&node_mapping, highways);
 
