@@ -1,5 +1,4 @@
-use geo::{BoundingRect, Coord, HaversineLength, LineString, Rect};
-use geojson::JsonObject;
+use geo::{BoundingRect, Coord, HaversineLength, LineString, MapCoords, MapCoordsInPlace, Rect};
 
 /// Projects WGS84 points onto a Euclidean plane, using a Mercator projection. The top-left is (0,
 /// 0) and grows to the right and down (screen-drawing order, not Cartesian), with units of meters.
@@ -10,6 +9,7 @@ pub struct Mercator {
     height: f64,
 }
 
+#[allow(dead_code)]
 impl Mercator {
     // TODO The API is kind of annoying, or wasteful. Do builder style.
     /// Create a boundary covering some geometry
@@ -32,7 +32,7 @@ impl Mercator {
         })
     }
 
-    pub fn to_mercator(&self, pt: Coord) -> Coord {
+    pub fn pt_to_mercator(&self, pt: Coord) -> Coord {
         let x = self.width * (pt.x - self.wgs84_bounds.min().x) / self.wgs84_bounds.width();
         // Invert y, so that the northernmost latitude is 0
         let y = self.height
@@ -40,17 +40,26 @@ impl Mercator {
         Coord { x, y }
     }
 
-    pub fn to_json(&self) -> JsonObject {
-        let mut obj = JsonObject::new();
-        obj.insert("width".to_string(), self.width.into());
-        obj.insert("height".to_string(), self.height.into());
-        obj.insert("x1".to_string(), self.wgs84_bounds.min().x.into());
-        obj.insert("y1".to_string(), self.wgs84_bounds.min().y.into());
-        obj.insert("x2".to_string(), self.wgs84_bounds.max().x.into());
-        obj.insert("y2".to_string(), self.wgs84_bounds.max().y.into());
+    pub fn pt_to_wgs84(&self, pt: Coord) -> Coord {
+        let x = self.wgs84_bounds.min().x + (pt.x / self.width * self.wgs84_bounds.width());
+        let y = self.wgs84_bounds.min().y
+            + (self.wgs84_bounds.height() * (self.height - pt.y) / self.height);
+        Coord { x, y }
+    }
 
-        let mut wrapper = JsonObject::new();
-        wrapper.insert("mercator".to_string(), obj.into());
-        wrapper
+    pub fn to_mercator<G: MapCoords<f64, f64, Output = G>>(&self, geom: &G) -> G {
+        geom.map_coords(|pt| self.pt_to_mercator(pt))
+    }
+
+    pub fn to_wgs84<G: MapCoords<f64, f64, Output = G>>(&self, geom: &G) -> G {
+        geom.map_coords(|pt| self.pt_to_wgs84(pt))
+    }
+
+    pub fn to_mercator_in_place<G: MapCoordsInPlace<f64>>(&self, geom: &mut G) {
+        geom.map_coords_in_place(|pt| self.pt_to_mercator(pt));
+    }
+
+    pub fn to_wgs84_in_place<G: MapCoordsInPlace<f64>>(&self, geom: &mut G) {
+        geom.map_coords_in_place(|pt| self.pt_to_wgs84(pt));
     }
 }

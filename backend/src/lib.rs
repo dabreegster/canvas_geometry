@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::sync::Once;
 
 use geo::{LineString, Point, Polygon};
-use geojson::FeatureCollection;
+use geojson::GeoJson;
 use wasm_bindgen::prelude::*;
 
 mod find_road_width;
@@ -18,6 +18,7 @@ static START: Once = Once::new();
 
 #[wasm_bindgen]
 pub struct MapModel {
+    #[allow(unused)]
     mercator: mercator::Mercator,
     roads: Vec<Road>,
     intersections: Vec<Intersection>,
@@ -80,11 +81,7 @@ impl MapModel {
             features.push(b.to_geojson());
         }
 
-        let gj = FeatureCollection {
-            features,
-            foreign_members: Some(self.mercator.to_json()),
-            bbox: None,
-        };
+        let gj = GeoJson::from(features);
         let out = serde_json::to_string(&gj).map_err(err_to_js)?;
         Ok(out)
     }
