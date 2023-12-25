@@ -77,7 +77,7 @@
     {#if $mode.mode == "find-width"}
       <FindRoadWidth />
     {:else if $mode.mode == "intersection-geometry"}
-      <IntersectionGeometry {gj} />
+      <IntersectionGeometry />
     {/if}
   </svg>
 {/key}

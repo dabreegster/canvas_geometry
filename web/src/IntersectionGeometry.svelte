@@ -1,33 +1,14 @@
 <script lang="ts">
-  import { buffer } from "@turf/turf";
-  import { gjToSvg, mercatorToSpherical, sphericalToMercator } from "./math";
-  import { mode } from "./stores";
+  import { polygonToSvg } from "./math";
+  import { map, mode } from "./stores";
 
-  export let gj;
-
-  // TODO Offline and losing my sanity
-  function has(list, x) {
-    for (let y of list) {
-      if (x == y) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  let roads = gj.features
-    .filter(
-      (f) =>
-        f.geometry.type == "LineString" &&
-        has($mode.intersection.properties.roads, f.properties.id)
-    )
-    .map((f) => mercatorToSpherical(gj, f));
-
-  let buffered = roads.map((f) => sphericalToMercator(gj, buffer(f, 0.005)));
+  let out = JSON.parse($map!.findIntersectionGeometry($mode.intersection.properties.id));
+  console.log($mode.intersection);
+  console.log(out);
 </script>
 
-{#each buffered as f}
-  <polygon points={gjToSvg(f.geometry.coordinates[0])} />
+{#each out.thick_roads as p}
+  <polygon points={polygonToSvg(p)} />
 {/each}
 
 <style>

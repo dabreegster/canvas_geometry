@@ -9,6 +9,7 @@ use geojson::FeatureCollection;
 use wasm_bindgen::prelude::*;
 
 mod find_road_width;
+mod intersection_geometry;
 mod mercator;
 mod output;
 mod scrape;
@@ -91,6 +92,13 @@ impl MapModel {
     #[wasm_bindgen(js_name = findRoadWidth)]
     pub fn find_road_width(&self, r: usize) -> Result<String, JsValue> {
         let obj = find_road_width::find_road_width(self, RoadID(r));
+        let out = serde_json::to_string(&obj).map_err(err_to_js)?;
+        Ok(out)
+    }
+
+    #[wasm_bindgen(js_name = findIntersectionGeometry)]
+    pub fn find_intersection_geometry(&self, i: usize) -> Result<String, JsValue> {
+        let obj = intersection_geometry::find_intersection_geometry(self, IntersectionID(i));
         let out = serde_json::to_string(&obj).map_err(err_to_js)?;
         Ok(out)
     }

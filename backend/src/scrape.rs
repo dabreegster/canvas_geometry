@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 
 use anyhow::Result;
 use geo::{Coord, Geometry, GeometryCollection, LineString, MapCoordsInPlace, Point, Polygon};
@@ -91,7 +91,8 @@ fn split_edges(
     }
 
     // Split each way into edges
-    let mut intersections = BTreeMap::new();
+    let mut node_to_intersection = HashMap::new();
+    let mut intersections = Vec::new();
     let mut roads = Vec::new();
     for way in ways {
         let mut node1 = way.node_ids[0];
@@ -108,17 +109,20 @@ fn split_edges(
                 let road_id = RoadID(roads.len());
 
                 for (n, point) in [(node1, pts[0]), (node, *pts.last().unwrap())] {
-                    let next_id = IntersectionID(intersections.len());
-                    intersections
-                        .entry(n)
-                        .or_insert_with(|| Intersection {
-                            id: next_id,
+                    let i = if let Some(i) = node_to_intersection.get(&n) {
+                        *i
+                    } else {
+                        let i = IntersectionID(intersections.len());
+                        node_to_intersection.insert(n, i);
+                        intersections.push(Intersection {
+                            id: i,
                             node: n,
                             point: Point(point),
                             roads: Vec::new(),
-                        })
-                        .roads
-                        .push(road_id);
+                        });
+                        i
+                    };
+                    intersections[i.0].roads.push(road_id);
                 }
 
                 roads.push(Road {
@@ -136,8 +140,6 @@ fn split_edges(
             }
         }
     }
-
-    let intersections = intersections.into_values().collect();
 
     (roads, intersections)
 }
