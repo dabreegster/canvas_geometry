@@ -3,10 +3,12 @@
   import { onMount } from "svelte";
   import xmlUrl from "../assets/input.osm?url";
   import Canvas from "./Canvas.svelte";
+  import FindRoadWidth from "./FindRoadWidth.svelte";
+  import IntersectionGeometry from "./IntersectionGeometry.svelte";
   import Layout from "./Layout.svelte";
   import Loading from "./Loading.svelte";
-  import Sidebar from "./Sidebar.svelte";
-  import { map } from "./stores";
+  import Neutral from "./Neutral.svelte";
+  import { map, mapContents, mode, sidebarContents } from "./stores";
 
   onMount(async () => {
     await init();
@@ -22,7 +24,6 @@
   });
 
   let loading = false;
-  let clickedFeature = null;
 
   let fileInput: HTMLInputElement;
   async function loadFile(e: Event) {
@@ -35,6 +36,12 @@
     }
     loading = false;
   }
+
+  let sidebarDiv;
+  $: if (sidebarDiv && $sidebarContents) {
+    sidebarDiv.innerHTML = "";
+    sidebarDiv.appendChild($sidebarContents);
+  }
 </script>
 
 <Layout>
@@ -42,12 +49,19 @@
     <label>
       <input bind:this={fileInput} on:change={loadFile} type="file" />
     </label>
-    <Sidebar {clickedFeature} />
+    <div bind:this={sidebarDiv} />
   </div>
   <div slot="main" style="position:relative; width: 100%; height: 100vh;">
     {#if $map}
-      <Canvas gj={JSON.parse($map.render())} bind:clickedFeature />
+      <Canvas gj={JSON.parse($map.render())} />
     {/if}
   </div>
 </Layout>
 <Loading {loading} />
+{#if $mode.mode == "neutral"}
+  <Neutral />
+{:else if $mode.mode == "find-width"}
+  <FindRoadWidth />
+{:else if $mode.mode == "intersection-geometry"}
+  <IntersectionGeometry />
+{/if}

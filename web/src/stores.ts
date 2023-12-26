@@ -17,3 +17,7 @@ export type Mode =
 
 export let map: Writable<MapModel | null> = writable(null);
 export let mode: Writable<Mode> = writable({ mode: "neutral" });
+export let clickedFeature: Writable<Feature | null> = writable(null);
+
+export let sidebarContents = writable(null);
+export let mapContents = writable(null);

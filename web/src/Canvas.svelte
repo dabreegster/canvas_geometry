@@ -1,14 +1,10 @@
 <script lang="ts">
   import svgPanZoom from "svg-pan-zoom";
-  import FindRoadWidth from "./FindRoadWidth.svelte";
-  import IntersectionGeometry from "./IntersectionGeometry.svelte";
   import { gjToSvg } from "./math";
-  import { mode } from "./stores";
+  import { clickedFeature, mapContents, mode } from "./stores";
 
   export let gj;
-  // TODO Hovered would be nicer
-  // TODO Clicking background show unset this
-  export let clickedFeature;
+  // TODO Clicking background show unset clickedFeature
 
   let roads = gj.features.filter((f) => f.geometry.type == "LineString");
   let intersections = gj.features.filter((f) => f.geometry.type == "Point");
@@ -37,17 +33,27 @@
     };
   }
 
+  // We want this behavior in all modes, so keep it here
   function setFocus(f) {
-    clickedFeature = f;
-    if (clickedFeature == null) {
+    $clickedFeature = f;
+    if ($clickedFeature == null) {
       mode.set({ mode: "neutral" });
-    } else if (clickedFeature.geometry.type == "LineString") {
-      mode.set({ mode: "find-width", road: clickedFeature });
-    } else if (clickedFeature.geometry.type == "Point") {
-      mode.set({ mode: "intersection-geometry", intersection: clickedFeature });
-    } else if (clickedFeature.geometry.type == "Polygon") {
+    } else if ($clickedFeature.geometry.type == "LineString") {
+      mode.set({ mode: "find-width", road: $clickedFeature });
+    } else if ($clickedFeature.geometry.type == "Point") {
+      mode.set({
+        mode: "intersection-geometry",
+        intersection: $clickedFeature,
+      });
+    } else if ($clickedFeature.geometry.type == "Polygon") {
       mode.set({ mode: "neutral" });
     }
+  }
+
+  let mapDiv;
+  $: if (mapDiv && $mapContents) {
+    mapDiv.innerHTML = "";
+    mapDiv.appendChild($mapContents);
   }
 </script>
 
@@ -57,7 +63,7 @@
       <polyline
         points={gjToSvg(f.geometry.coordinates)}
         on:click={() => setFocus(f)}
-        class:clicked={clickedFeature == f}
+        class:clicked={$clickedFeature == f}
       />
     {/each}
     {#each intersections as f}
@@ -66,21 +72,17 @@
         cy={f.geometry.coordinates[1]}
         r="1"
         on:click={() => setFocus(f)}
-        class:clicked={clickedFeature == f}
+        class:clicked={$clickedFeature == f}
       />
     {/each}
     {#each buildings as f}
       <polygon
         points={gjToSvg(f.geometry.coordinates[0])}
         on:click={() => setFocus(f)}
-        class:clicked={clickedFeature == f}
+        class:clicked={$clickedFeature == f}
       />
     {/each}
-    {#if $mode.mode == "find-width"}
-      <FindRoadWidth />
-    {:else if $mode.mode == "intersection-geometry"}
-      <IntersectionGeometry />
-    {/if}
+    <g bind:this={mapDiv} />
   </svg>
 {/key}
 
