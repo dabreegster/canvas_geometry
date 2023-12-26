@@ -39,7 +39,9 @@
 
   function setFocus(f) {
     clickedFeature = f;
-    if (clickedFeature.geometry.type == "LineString") {
+    if (clickedFeature == null) {
+      mode.set({ mode: "neutral" });
+    } else if (clickedFeature.geometry.type == "LineString") {
       mode.set({ mode: "find-width", road: clickedFeature });
     } else if (clickedFeature.geometry.type == "Point") {
       mode.set({ mode: "intersection-geometry", intersection: clickedFeature });
@@ -50,7 +52,7 @@
 </script>
 
 {#key $mode}
-  <svg use:panZoom>
+  <svg use:panZoom on:click={() => setFocus(null)}>
     {#each roads as f}
       <polyline
         points={gjToSvg(f.geometry.coordinates)}
