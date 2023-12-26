@@ -1,4 +1,4 @@
-use geo::{LineString, OffsetCurve, Polygon};
+use geo::{BooleanOps, LineString, MultiPolygon, OffsetCurve, Polygon};
 use serde::Serialize;
 
 use crate::{IntersectionID, MapModel};
@@ -6,6 +6,8 @@ use crate::{IntersectionID, MapModel};
 #[derive(Serialize)]
 pub struct Output {
     thick_roads: Vec<Polygon>,
+    overlaps: Vec<MultiPolygon>,
+    unioned: MultiPolygon,
 }
 
 pub fn find_intersection_geometry(map: &MapModel, i: IntersectionID) -> Output {
@@ -20,7 +22,24 @@ pub fn find_intersection_geometry(map: &MapModel, i: IntersectionID) -> Output {
         }
     }
 
-    Output { thick_roads }
+    // Take every pair of roads (TODO just adjacent), find their intersection ("overlap" for
+    // sanity), then union all of that.
+    let mut overlaps = Vec::new();
+    for idx1 in 0..thick_roads.len() {
+        for idx2 in 0..thick_roads.len() {
+            if idx1 != idx2 {
+                let overlap = thick_roads[idx1].intersection(&thick_roads[idx2]);
+                overlaps.push(overlap);
+            }
+        }
+    }
+    let unioned = union_all(overlaps.clone());
+
+    Output {
+        thick_roads,
+        overlaps,
+        unioned,
+    }
 }
 
 fn buffer_linestring(linestring: &LineString, buffer_meters: f64) -> Option<Polygon> {
@@ -31,4 +50,12 @@ fn buffer_linestring(linestring: &LineString, buffer_meters: f64) -> Option<Poly
     pts.reverse();
     pts.extend(right.0);
     Some(Polygon::new(LineString(pts), Vec::new()))
+}
+
+fn union_all(mut list: Vec<MultiPolygon>) -> MultiPolygon {
+    let mut result = list.pop().unwrap();
+    while let Some(next) = list.pop() {
+        result = result.union(&next);
+    }
+    result
 }
