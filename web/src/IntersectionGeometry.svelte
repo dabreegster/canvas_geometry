@@ -6,8 +6,10 @@
   let out = JSON.parse(
     $map!.findIntersectionGeometry($mode.intersection.properties.id)
   );
-  console.log($mode.intersection);
-  console.log(out);
+
+  let showThickRoads = true;
+  let showOverlaps = true;
+  let showUnioned = true;
 </script>
 
 <SplitComponent>
@@ -16,17 +18,35 @@
     <div>
       <button on:click={() => mode.set({ mode: "neutral" })}>Back</button>
     </div>
+    <div>
+      <input type="checkbox" bind:checked={showThickRoads} />Show thick roads ({out
+        .thick_roads.length})
+    </div>
+    <div>
+      <input type="checkbox" bind:checked={showOverlaps} />Show overlaps ({out.overlaps.flat()
+        .length})
+    </div>
+    <div>
+      <input type="checkbox" bind:checked={showUnioned} />Show unioned ({out.unioned.flat()
+        .length})
+    </div>
   </div>
   <g slot="map">
-    {#each out.thick_roads as p}
-      <polygon points={polygonToSvg(p)} class="thick" />
-    {/each}
-    {#each out.overlaps.flat() as p}
-      <polygon points={polygonToSvg(p)} class="overlaps" />
-    {/each}
-    {#each out.unioned.flat() as p}
-      <polygon points={polygonToSvg(p)} class="unioned" />
-    {/each}
+    {#if showThickRoads}
+      {#each out.thick_roads as p}
+        <polygon points={polygonToSvg(p)} class="thick" />
+      {/each}
+    {/if}
+    {#if showOverlaps}
+      {#each out.overlaps.flat() as p}
+        <polygon points={polygonToSvg(p)} class="overlaps" />
+      {/each}
+    {/if}
+    {#if showUnioned}
+      {#each out.unioned.flat() as p}
+        <polygon points={polygonToSvg(p)} class="unioned" />
+      {/each}
+    {/if}
   </g>
 </SplitComponent>
 
