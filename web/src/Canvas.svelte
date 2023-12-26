@@ -37,6 +37,7 @@
   function setFocus(f) {
     $clickedFeature = f;
     if ($clickedFeature == null) {
+      // TODO Click and drag incorrectly triggers this
       mode.set({ mode: "neutral" });
     } else if ($clickedFeature.geometry.type == "LineString") {
       mode.set({ mode: "find-width", road: $clickedFeature });
@@ -119,6 +120,6 @@
 
   .clicked {
     stroke: yellow;
-    stroke-width: 3;
+    stroke-width: 1;
   }
 </style>

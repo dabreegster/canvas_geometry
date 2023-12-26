@@ -5,3 +5,12 @@ export function gjToSvg(points) {
 export function polygonToSvg(polygon) {
   return polygon.exterior.map((pt) => `${pt.x},${pt.y}`).join(" ");
 }
+
+export function lineToSvg(line) {
+  return {
+    x1: line.start.x,
+    y1: line.start.y,
+    x2: line.end.x,
+    y2: line.end.y,
+  };
+}

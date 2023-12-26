@@ -3,7 +3,7 @@
   import SplitComponent from "./SplitComponent.svelte";
   import { map, mode } from "./stores";
 
-  let out = JSON.parse(
+  $: out = JSON.parse(
     $map!.findIntersectionGeometry($mode.intersection.properties.id)
   );
 

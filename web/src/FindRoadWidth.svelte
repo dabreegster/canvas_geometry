@@ -1,9 +1,9 @@
 <script lang="ts">
+  import { lineToSvg } from "./math";
   import SplitComponent from "./SplitComponent.svelte";
   import { map, mode } from "./stores";
 
-  let out = JSON.parse($map!.findRoadWidth($mode.road.properties.id));
-  console.log(out);
+  $: out = JSON.parse($map!.findRoadWidth($mode.road.properties.id));
 </script>
 
 <SplitComponent>
@@ -16,20 +16,8 @@
   <g slot="map">
     {#each out.test_points as test}
       <circle cx={test.pt.x} cy={test.pt.y} r="0.2" />
-      <line
-        class="left"
-        x1={test.line_left.start.x}
-        y1={test.line_left.start.y}
-        x2={test.line_left.end.x}
-        y2={test.line_left.end.y}
-      />
-      <line
-        class="right"
-        x1={test.line_right.start.x}
-        y1={test.line_right.start.y}
-        x2={test.line_right.end.x}
-        y2={test.line_right.end.y}
-      />
+      <line class="left" {...lineToSvg(test.line_left)} />
+      <line class="right" {...lineToSvg(test.line_right)} />
     {/each}
   </g>
 </SplitComponent>
