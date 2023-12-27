@@ -1,7 +1,12 @@
 <script lang="ts">
   import svgPanZoom from "svg-pan-zoom";
   import { gjToSvg } from "./math";
-  import { clickedFeature, mapContents, mode } from "./stores";
+  import {
+    clickedFeature,
+    mapContents,
+    mode,
+    showRealRoadWidth,
+  } from "./stores";
 
   export let gj;
   // TODO Clicking background show unset clickedFeature
@@ -65,6 +70,9 @@
         points={gjToSvg(f.geometry.coordinates)}
         on:click={() => setFocus(f)}
         class:clicked={$clickedFeature == f}
+        style:stroke-width={$showRealRoadWidth
+          ? f.properties.max_left_width + f.properties.max_right_width
+          : null}
       />
     {/each}
     {#each intersections as f}

@@ -12,6 +12,13 @@ impl Road {
         for (k, v) in &self.tags {
             f.set_property(k, v.to_string());
         }
+
+        if let Some(max) = self.max_left_width {
+            f.set_property("max_left_width", max);
+        }
+        if let Some(max) = self.max_right_width {
+            f.set_property("max_right_width", max);
+        }
         f
     }
 }

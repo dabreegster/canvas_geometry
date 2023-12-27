@@ -8,7 +8,13 @@
   import Layout from "./Layout.svelte";
   import Loading from "./Loading.svelte";
   import Neutral from "./Neutral.svelte";
-  import { map, mapContents, mode, sidebarContents } from "./stores";
+  import {
+    map,
+    mapContents,
+    mode,
+    showRealRoadWidth,
+    sidebarContents,
+  } from "./stores";
 
   onMount(async () => {
     await init();
@@ -49,6 +55,12 @@
     <label>
       <input bind:this={fileInput} on:change={loadFile} type="file" />
     </label>
+    <div>
+      <label>
+        <input type="checkbox" bind:checked={$showRealRoadWidth} /> Show calculated
+        road widths
+      </label>
+    </div>
     <div bind:this={sidebarDiv} />
   </div>
   <div slot="main" style="position:relative; width: 100%; height: 100vh;">

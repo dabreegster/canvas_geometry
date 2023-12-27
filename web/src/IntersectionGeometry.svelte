@@ -19,16 +19,22 @@
       <button on:click={() => mode.set({ mode: "neutral" })}>Back</button>
     </div>
     <div>
-      <input type="checkbox" bind:checked={showThickRoads} />Show thick roads ({out
-        .thick_roads.length})
+      <label>
+        <input type="checkbox" bind:checked={showThickRoads} />Show thick roads
+        ({out.thick_roads.length})
+      </label>
     </div>
     <div>
-      <input type="checkbox" bind:checked={showOverlaps} />Show overlaps ({out.overlaps.flat()
-        .length})
+      <label>
+        <input type="checkbox" bind:checked={showOverlaps} />Show overlaps ({out.overlaps.flat()
+          .length})
+      </label>
     </div>
     <div>
-      <input type="checkbox" bind:checked={showUnioned} />Show unioned ({out.unioned.flat()
-        .length})
+      <label>
+        <input type="checkbox" bind:checked={showUnioned} />Show unioned ({out.unioned.flat()
+          .length})
+      </label>
     </div>
   </div>
   <g slot="map">

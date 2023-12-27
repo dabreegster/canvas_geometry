@@ -21,7 +21,8 @@ pub struct TestLine {
 
 pub fn find_road_width(map: &MapModel, r: RoadID) -> Output {
     let step_size_meters = 1.0;
-    let project_away_meters = 5.0;
+    // How far away could buildings be from a center?
+    let project_away_meters = 25.0;
 
     // This keeps existing points, which is fine
     let dense_line = map.roads[r.0].linestring.densify(step_size_meters);
@@ -107,4 +108,16 @@ fn split_line_by_polygon(line: Line, polygon: &Polygon) -> Option<Line> {
         }
     }
     shortest.map(|pair| pair.0)
+}
+
+pub fn find_all(map: &mut MapModel) {
+    let results = map
+        .roads
+        .iter()
+        .map(|r| find_road_width(map, r.id))
+        .collect::<Vec<_>>();
+    for (road, out) in map.roads.iter_mut().zip(results.into_iter()) {
+        road.max_left_width = Some(out.max_left_width);
+        road.max_right_width = Some(out.max_right_width);
+    }
 }

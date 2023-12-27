@@ -37,6 +37,10 @@ struct Road {
     node2: osm_reader::NodeID,
     linestring: LineString,
     tags: HashMap<String, String>,
+
+    // Derived a bit later
+    max_left_width: Option<f64>,
+    max_right_width: Option<f64>,
 }
 
 struct Intersection {

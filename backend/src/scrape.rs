@@ -69,12 +69,14 @@ pub fn scrape_osm(input_bytes: &[u8]) -> Result<MapModel> {
         mercator.to_mercator_in_place(&mut b.polygon);
     }
 
-    Ok(MapModel {
+    let mut map = MapModel {
         mercator,
         roads,
         intersections,
         buildings,
-    })
+    };
+    crate::find_road_width::find_all(&mut map);
+    Ok(map)
 }
 
 fn split_edges(
@@ -131,6 +133,9 @@ fn split_edges(
                     node2: node,
                     linestring: LineString::new(std::mem::take(&mut pts)),
                     tags: way.tags.clone(),
+
+                    max_left_width: None,
+                    max_right_width: None,
                 });
 
                 // Start the next edge
