@@ -16,8 +16,8 @@
   <g slot="map">
     {#each out.test_points as test}
       <circle cx={test.pt.x} cy={test.pt.y} r="0.2" />
-      <line class="left" {...lineToSvg(test.line_left)} />
-      <line class="right" {...lineToSvg(test.line_right)} />
+      <line class="left" class:hits={test.left_hits} {...lineToSvg(test.line_left)} />
+      <line class="right" class:hits={test.right_hits} {...lineToSvg(test.line_right)} />
     {/each}
   </g>
 </SplitComponent>
@@ -35,5 +35,9 @@
   .right {
     stroke: blue;
     stroke-width: 0.1;
+  }
+
+  .hits {
+    stroke-dasharray: 0.5;
   }
 </style>

@@ -1,4 +1,4 @@
-use geo::{Coord, Densify, Line};
+use geo::{Coord, Densify, Intersects, Line};
 use serde::Serialize;
 
 use crate::{MapModel, RoadID};
@@ -12,7 +12,9 @@ pub struct Output {
 pub struct TestPoint {
     pt: Coord,
     line_left: Line,
+    left_hits: bool,
     line_right: Line,
+    right_hits: bool,
 }
 
 pub fn find_road_width(map: &MapModel, r: RoadID) -> Output {
@@ -31,10 +33,18 @@ pub fn find_road_width(map: &MapModel, r: RoadID) -> Output {
         let angle = orig_line.dy().atan2(orig_line.dx()).to_degrees();
         let projected_left = project_away(pt, angle - 90.0, project_away_meters);
         let projected_right = project_away(pt, angle + 90.0, project_away_meters);
+        let line_left = Line::new(pt, projected_left);
+        let line_right = Line::new(pt, projected_right);
+
+        let left_hits = map.buildings.iter().any(|b| b.polygon.intersects(&line_left));
+        let right_hits = map.buildings.iter().any(|b| b.polygon.intersects(&line_right));
+
         test_points.push(TestPoint {
             pt,
-            line_left: Line::new(pt, projected_left),
-            line_right: Line::new(pt, projected_right),
+            line_left,
+            left_hits,
+            line_right,
+            right_hits,
         });
     }
 
