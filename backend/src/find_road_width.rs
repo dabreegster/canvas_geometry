@@ -1,6 +1,7 @@
-use geo::{Coord, Densify, EuclideanLength, Intersects, Line, LineIntersection, Polygon};
+use geo::{Densify, EuclideanLength, Intersects, Line};
 use serde::Serialize;
 
+use crate::math::{buffer_linestring, project_away, split_line_by_polygon};
 use crate::{MapModel, RoadID};
 
 #[derive(Serialize)]
@@ -76,40 +77,6 @@ pub fn find_road_width(map: &MapModel, r: RoadID) -> Output {
     }
 }
 
-fn project_away(pt: Coord, angle_degrees: f64, distance: f64) -> Coord {
-    let (sin, cos) = angle_degrees.to_radians().sin_cos();
-    Coord {
-        x: pt.x + distance * cos,
-        y: pt.y + distance * sin,
-    }
-}
-
-// See also https://github.com/georust/geo/issues/985
-fn split_line_by_polygon(line: Line, polygon: &Polygon) -> Option<Line> {
-    // The input line could intersect the polygon's exterior at several places. Find the hit
-    // closest to line.start.
-    let mut shortest: Option<(Line, f64)> = None;
-    // Ignore polygon holes
-    for polygon_line in polygon.exterior().lines() {
-        if let Some(LineIntersection::SinglePoint { intersection, .. }) =
-            geo::algorithm::line_intersection::line_intersection(line, polygon_line)
-        {
-            // Assume line.start is outside the polygon and we're looking for the place it first
-            // crosses into the polygon
-            let candidate = Line::new(line.start, intersection);
-            let candidate_length = candidate.euclidean_length();
-            if shortest
-                .as_ref()
-                .map(|(_, len)| candidate_length < *len)
-                .unwrap_or(true)
-            {
-                shortest = Some((candidate, candidate_length));
-            }
-        }
-    }
-    shortest.map(|pair| pair.0)
-}
-
 pub fn find_all(map: &mut MapModel) {
     let results = map
         .roads
@@ -119,5 +86,8 @@ pub fn find_all(map: &mut MapModel) {
     for (road, out) in map.roads.iter_mut().zip(results.into_iter()) {
         road.max_left_width = Some(out.max_left_width);
         road.max_right_width = Some(out.max_right_width);
+        // TODO Re-center
+        road.polygon =
+            buffer_linestring(&road.linestring, out.max_left_width + out.max_right_width);
     }
 }

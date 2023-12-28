@@ -136,6 +136,7 @@ fn split_edges(
 
                     max_left_width: None,
                     max_right_width: None,
+                    polygon: None,
                 });
 
                 // Start the next edge

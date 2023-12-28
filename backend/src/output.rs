@@ -19,6 +19,10 @@ impl Road {
         if let Some(max) = self.max_right_width {
             f.set_property("max_right_width", max);
         }
+        if let Some(ref polygon) = self.polygon {
+            // TODO As an object would be better
+            f.set_property("polygon", serde_json::to_string(polygon).unwrap());
+        }
         f
     }
 }

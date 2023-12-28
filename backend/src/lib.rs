@@ -10,6 +10,7 @@ use wasm_bindgen::prelude::*;
 
 mod find_road_width;
 mod intersection_geometry;
+mod math;
 mod mercator;
 mod output;
 mod scrape;
@@ -41,6 +42,7 @@ struct Road {
     // Derived a bit later
     max_left_width: Option<f64>,
     max_right_width: Option<f64>,
+    polygon: Option<Polygon>,
 }
 
 struct Intersection {

@@ -1,6 +1,7 @@
-use geo::{BooleanOps, LineString, MultiPolygon, OffsetCurve, Polygon};
+use geo::{BooleanOps, MultiPolygon, Polygon};
 use serde::Serialize;
 
+use crate::math::{buffer_linestring, union_all};
 use crate::{IntersectionID, MapModel};
 
 #[derive(Serialize)]
@@ -40,22 +41,4 @@ pub fn find_intersection_geometry(map: &MapModel, i: IntersectionID) -> Output {
         overlaps,
         unioned,
     }
-}
-
-fn buffer_linestring(linestring: &LineString, buffer_meters: f64) -> Option<Polygon> {
-    let left = linestring.offset_curve(-buffer_meters)?;
-    let right = linestring.offset_curve(buffer_meters)?;
-    // Make a polygon by gluing these points together
-    let mut pts = left.0;
-    pts.reverse();
-    pts.extend(right.0);
-    Some(Polygon::new(LineString(pts), Vec::new()))
-}
-
-fn union_all(mut list: Vec<MultiPolygon>) -> MultiPolygon {
-    let mut result = list.pop().unwrap();
-    while let Some(next) = list.pop() {
-        result = result.union(&next);
-    }
-    result
 }

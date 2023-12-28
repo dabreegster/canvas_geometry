@@ -1,6 +1,6 @@
 <script lang="ts">
   import svgPanZoom from "svg-pan-zoom";
-  import { gjToSvg } from "./math";
+  import { gjToSvg, polygonToSvg } from "./math";
   import {
     clickedFeature,
     mapContents,
@@ -66,14 +66,20 @@
 {#key $mode}
   <svg use:panZoom on:click={() => setFocus(null)}>
     {#each roads as f}
-      <polyline
-        points={gjToSvg(f.geometry.coordinates)}
-        on:click={() => setFocus(f)}
-        class:clicked={$clickedFeature == f}
-        style:stroke-width={$showRealRoadWidth
-          ? f.properties.max_left_width + f.properties.max_right_width
-          : null}
-      />
+      {#if $showRealRoadWidth && f.properties.polygon}
+        <polygon
+          points={polygonToSvg(JSON.parse(f.properties.polygon))}
+          on:click={() => setFocus(f)}
+          class="road-outline"
+          class:clicked={$clickedFeature == f}
+        />
+      {:else}
+        <polyline
+          points={gjToSvg(f.geometry.coordinates)}
+          on:click={() => setFocus(f)}
+          class:clicked={$clickedFeature == f}
+        />
+      {/if}
     {/each}
     {#each intersections as f}
       <circle
@@ -117,6 +123,10 @@
   }
   polygon:hover {
     fill: blue;
+  }
+
+  .road-outline {
+    fill: none;
   }
 
   circle {
