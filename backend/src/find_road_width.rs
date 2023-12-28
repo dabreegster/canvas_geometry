@@ -1,8 +1,8 @@
-use geo::{Densify, EuclideanLength, Intersects, Line, Polygon};
+use geo::{Densify, EuclideanLength, Intersects, Line, LineString, Polygon};
 use serde::Serialize;
 
 use crate::math::{buffer_linestring, project_away, split_line_by_polygon};
-use crate::{MapModel, RoadID};
+use crate::{MapModel, Road, RoadID};
 
 #[derive(Serialize)]
 pub struct Output {
@@ -10,6 +10,7 @@ pub struct Output {
     max_left_width: f64,
     max_right_width: f64,
     buffered_polygon: Option<Polygon>,
+    parallel_roads: Vec<(LineString, String)>,
 }
 
 #[derive(Serialize)]
@@ -27,7 +28,8 @@ pub fn find_road_width(map: &MapModel, r: RoadID) -> Output {
     let project_away_meters = 25.0;
 
     // This keeps existing points, which is fine
-    let dense_line = map.roads[r.0].linestring.densify(step_size_meters);
+    let original_road = &map.roads[r.0];
+    let dense_line = original_road.linestring.densify(step_size_meters);
 
     let mut test_lines = Vec::new();
     // Using lines instead of coords so we can get the angle -- but is this hard to reason about?
@@ -35,7 +37,7 @@ pub fn find_road_width(map: &MapModel, r: RoadID) -> Output {
     for orig_line in dense_line.lines() {
         // TODO For the last line, use the last point too
         let pt = orig_line.start;
-        let angle = orig_line.dy().atan2(orig_line.dx()).to_degrees();
+        let angle = line_angle_degrees(orig_line);
 
         for (angle_offset, left) in [(-90.0, true), (90.0, false)] {
             let projected = project_away(pt, angle + angle_offset, project_away_meters);
@@ -72,13 +74,19 @@ pub fn find_road_width(map: &MapModel, r: RoadID) -> Output {
     }
 
     let buffered_polygon =
-        buffer_linestring(&map.roads[r.0].linestring, max_left_width, max_right_width);
+        buffer_linestring(&original_road.linestring, max_left_width, max_right_width);
+    let parallel_roads = if let Some(ref poly) = buffered_polygon {
+        find_parallel_roads(map, poly, original_road)
+    } else {
+        Vec::new()
+    };
 
     Output {
         test_lines,
         max_left_width,
         max_right_width,
         buffered_polygon,
+        parallel_roads,
     }
 }
 
@@ -93,4 +101,56 @@ pub fn find_all(map: &mut MapModel) {
         road.max_right_width = Some(out.max_right_width);
         road.polygon = buffer_linestring(&road.linestring, out.max_left_width, out.max_right_width);
     }
+}
+
+fn find_parallel_roads(
+    map: &MapModel,
+    within_polygon: &Polygon,
+    original_road: &Road,
+) -> Vec<(LineString, String)> {
+    let mut parallel = Vec::new();
+    for road in &map.roads {
+        if road.id == original_road.id {
+            continue;
+        }
+        if within_polygon.intersects(&road.linestring) {
+            // TODO Connecting lines are included here; we want to exclude them. Check how much of the linestring overlaps the buffer? Or maybe see if the shorter thing (no matter what it is) mostly overlaps?
+            if !nearly_parallel(&original_road.linestring, &road.linestring, 10.0) {
+                continue;
+            }
+            //let score = format!("Hausdorff {}", road.linestring.hausdorff_distance(&original_road.linestring));
+            let score = format!(
+                "Average angle orig {}, this road {}",
+                average_angle(&original_road.linestring),
+                average_angle(&road.linestring)
+            );
+
+            parallel.push((road.linestring.clone(), score));
+        }
+    }
+    parallel
+}
+
+// TODO move to math
+
+fn line_angle_degrees(line: Line) -> f64 {
+    line.dy().atan2(line.dx()).to_degrees()
+}
+
+fn average_angle(linestring: &LineString) -> f64 {
+    let angles: Vec<f64> = linestring
+        .lines()
+        .map(|line| line_angle_degrees(line))
+        .collect();
+    angles.iter().sum::<f64>() / (angles.len() as f64)
+}
+
+/// Degrees for input/output. Returns [-180, 180]. See  //
+/// https://math.stackexchange.com/questions/110080/shortest-way-to-achieve-target-angle
+fn shortest_rotation(angle1: f64, angle2: f64) -> f64 {
+    ((angle1 - angle2 + 540.0) % 360.0) - 180.0
+}
+
+fn nearly_parallel(ls1: &LineString, ls2: &LineString, epsilon_degrees: f64) -> bool {
+    shortest_rotation(average_angle(ls1), average_angle(ls2)).abs() < epsilon_degrees
 }

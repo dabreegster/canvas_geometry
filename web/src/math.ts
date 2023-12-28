@@ -3,7 +3,11 @@ export function gjToSvg(points) {
 }
 
 export function polygonToSvg(polygon) {
-  return polygon.exterior.map((pt) => `${pt.x},${pt.y}`).join(" ");
+  return linestringToSvg(polygon.exterior);
+}
+
+export function linestringToSvg(linestring) {
+  return linestring.map((pt) => `${pt.x},${pt.y}`).join(" ");
 }
 
 export function lineToSvg(line) {

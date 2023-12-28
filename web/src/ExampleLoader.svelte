@@ -4,7 +4,7 @@
   import Loading from "./Loading.svelte";
   import { map } from "./stores";
 
-  let example = "borough_sausage_links";
+  let example = "st_georges_cycletrack";
   let useLocalVite = false;
   let loading = false;
 
