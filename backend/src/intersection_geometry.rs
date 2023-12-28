@@ -12,11 +12,15 @@ pub struct Output {
 }
 
 pub fn find_intersection_geometry(map: &MapModel, i: IntersectionID) -> Output {
-    let buffer_meters = 1.0;
+    let half_buffer_meters = 1.0;
 
     let mut thick_roads = Vec::new();
     for r in &map.intersections[i.0].roads {
-        if let Some(polygon) = buffer_linestring(&map.roads[r.0].linestring, buffer_meters) {
+        if let Some(polygon) = buffer_linestring(
+            &map.roads[r.0].linestring,
+            half_buffer_meters,
+            half_buffer_meters,
+        ) {
             thick_roads.push(polygon);
         } else {
             warn!("Couldn't buffer a road");

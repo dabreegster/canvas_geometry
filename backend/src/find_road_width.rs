@@ -1,4 +1,4 @@
-use geo::{Densify, EuclideanLength, Intersects, Line};
+use geo::{Densify, EuclideanLength, Intersects, Line, Polygon};
 use serde::Serialize;
 
 use crate::math::{buffer_linestring, project_away, split_line_by_polygon};
@@ -9,6 +9,7 @@ pub struct Output {
     test_lines: Vec<TestLine>,
     max_left_width: f64,
     max_right_width: f64,
+    buffered_polygon: Option<Polygon>,
 }
 
 #[derive(Serialize)]
@@ -70,10 +71,14 @@ pub fn find_road_width(map: &MapModel, r: RoadID) -> Output {
         }
     }
 
+    let buffered_polygon =
+        buffer_linestring(&map.roads[r.0].linestring, max_left_width, max_right_width);
+
     Output {
         test_lines,
         max_left_width,
         max_right_width,
+        buffered_polygon,
     }
 }
 
@@ -86,8 +91,6 @@ pub fn find_all(map: &mut MapModel) {
     for (road, out) in map.roads.iter_mut().zip(results.into_iter()) {
         road.max_left_width = Some(out.max_left_width);
         road.max_right_width = Some(out.max_right_width);
-        // TODO Re-center
-        road.polygon =
-            buffer_linestring(&road.linestring, out.max_left_width + out.max_right_width);
+        road.polygon = buffer_linestring(&road.linestring, out.max_left_width, out.max_right_width);
     }
 }

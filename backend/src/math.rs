@@ -4,9 +4,15 @@ use geo::{
     OffsetCurve, Polygon,
 };
 
-pub fn buffer_linestring(linestring: &LineString, buffer_meters: f64) -> Option<Polygon> {
-    let left = linestring.offset_curve(-buffer_meters)?;
-    let right = linestring.offset_curve(buffer_meters)?;
+pub fn buffer_linestring(
+    linestring: &LineString,
+    left_meters: f64,
+    right_meters: f64,
+) -> Option<Polygon> {
+    assert!(left_meters >= 0.0);
+    assert!(right_meters >= 0.0);
+    let left = linestring.offset_curve(-left_meters)?;
+    let right = linestring.offset_curve(right_meters)?;
     // Make a polygon by gluing these points together
     let mut pts = left.0;
     pts.reverse();

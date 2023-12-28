@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { lineToSvg } from "./math";
+  import { lineToSvg, polygonToSvg } from "./math";
   import SplitComponent from "./SplitComponent.svelte";
   import { map, mode } from "./stores";
 
@@ -26,6 +26,10 @@
         <line class={direction} {...lineToSvg(test.full_line)} />
       {/if}
     {/each}
+
+    <polygon
+      points={polygonToSvg(out.buffered_polygon)}
+    />
   </g>
 </SplitComponent>
 
@@ -47,5 +51,10 @@
   }
   .hits:hover {
     stroke-opacity: 0.5;
+  }
+
+  polygon {
+    fill: none;
+    stroke: green;
   }
 </style>

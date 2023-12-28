@@ -127,6 +127,7 @@
 
   .road-outline {
     fill: none;
+    stroke: green;
   }
 
   circle {
