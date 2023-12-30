@@ -9,6 +9,11 @@
     $map!.traceGraphLoop(node);
     out = JSON.parse($map!.renderGraph());
   }
+
+  function undo() {
+    $map!.undoGraph();
+    out = JSON.parse($map!.renderGraph());
+  }
 </script>
 
 <SplitComponent>
@@ -16,6 +21,9 @@
     <p>Graph mode</p>
     <div>
       <button on:click={() => mode.set({ mode: "neutral" })}>Back</button>
+    </div>
+    <div>
+      <button on:click={undo}>Undo</button>
     </div>
   </div>
   <g slot="map">

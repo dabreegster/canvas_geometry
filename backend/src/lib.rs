@@ -29,6 +29,7 @@ pub struct MapModel {
 
     // TODO Weird to embed like this, but easier to prototype
     graph: graph::Graph,
+    graph_undo_stack: Vec<graph::Graph>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord, Serialize)]
@@ -121,7 +122,15 @@ impl MapModel {
 
     #[wasm_bindgen(js_name = traceGraphLoop)]
     pub fn trace_graph_loop(&mut self, node: usize) {
+        self.graph_undo_stack.push(self.graph.clone());
         self.graph.trace_graph_loop(node)
+    }
+
+    #[wasm_bindgen(js_name = undoGraph)]
+    pub fn undo_graph(&mut self) {
+        if let Some(g) = self.graph_undo_stack.pop() {
+            self.graph = g;
+        }
     }
 }
 

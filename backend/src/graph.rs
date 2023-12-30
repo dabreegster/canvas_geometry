@@ -6,7 +6,7 @@ use serde::Serialize;
 use crate::{Intersection, IntersectionID, Road, RoadID};
 
 /// Much more mutable than a MapModel, but refers back to original roads and intersections.
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 pub struct Graph {
     edges: HashMap<EdgeID, Edge>,
     nodes: HashMap<NodeID, Node>,
@@ -19,7 +19,7 @@ pub struct EdgeID(pub usize);
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct NodeID(pub usize);
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 struct Edge {
     id: EdgeID,
     node1: NodeID,
@@ -41,7 +41,7 @@ impl Edge {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 struct Node {
     id: NodeID,
     edges: HashSet<EdgeID>,

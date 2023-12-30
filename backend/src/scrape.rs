@@ -77,6 +77,7 @@ pub fn scrape_osm(input_bytes: &[u8]) -> Result<MapModel> {
         intersections,
         buildings,
         graph,
+        graph_undo_stack: Vec::new(),
     };
     crate::find_road_width::find_all(&mut map);
     Ok(map)
