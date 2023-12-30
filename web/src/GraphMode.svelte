@@ -20,7 +20,9 @@
   </div>
   <g slot="map">
     {#each Object.values(out.edges) as edge}
-      <polyline points={linestringToSvg(edge.linestring)} />
+      <polyline points={linestringToSvg(edge.linestring)}>
+        <title>{JSON.stringify(edge)}</title>
+      </polyline>
     {/each}
     {#each Object.values(out.nodes) as node}
       <circle
@@ -29,8 +31,8 @@
         r="1"
         on:click={() => traceLoop(node.id)}
       >
-      <title>{node.id}</title>
-  </circle>
+        <title>{JSON.stringify(node)}</title>
+      </circle>
     {/each}
   </g>
 </SplitComponent>

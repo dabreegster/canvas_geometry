@@ -121,10 +121,45 @@ impl Graph {
             return;
         };
         info!("Got path {:?}", nodes);
-        // For all the nodes in there, calculate the centroid
-        // Remove all the edges in the path
-        // Remove all the nodes in the path. Create a new one with the centroid and preserving all
-        // the old edges.
+
+        // Calculate the centroid of the nodes in this loop
+        let centroid = average(nodes.iter().map(|n| self.nodes[n].point).collect());
+        let new_node = self.new_node_id();
+
+        // Remove the edges in this loop
+        for e in self.nodes_to_edges(&nodes) {
+            self.remove_edge(e);
+        }
+
+        // Remove all the old nodes, create one new one
+        let mut intersections = HashSet::new();
+        for n in nodes.into_iter().skip(1) {
+            let old_node = self.nodes.remove(&n).unwrap();
+            intersections.extend(old_node.intersections);
+
+            // For any edge connected to the old node, connect it instead to our new merged node,
+            // fixing up the geometry
+            for e in old_node.edges {
+                let fix_edge = self.edges.get_mut(&e).unwrap();
+                if fix_edge.node1 == old_node.id {
+                    fix_edge.node1 = new_node;
+                    fix_edge.linestring.0.insert(0, centroid.into());
+                } else {
+                    fix_edge.node2 = new_node;
+                    fix_edge.linestring.0.push(centroid.into());
+                }
+            }
+        }
+        self.nodes.insert(
+            new_node,
+            Node {
+                id: new_node,
+                edges: HashSet::new(),
+
+                point: centroid,
+                intersections,
+            },
+        );
     }
 
     fn find_cycle(&self, on_node: NodeID) -> Option<Vec<NodeID>> {
@@ -162,4 +197,37 @@ impl Graph {
 
         None
     }
+
+    fn nodes_to_edges(&self, path: &Vec<NodeID>) -> Vec<EdgeID> {
+        let mut edges = Vec::new();
+        for pair in path.windows(2) {
+            edges.push(
+                *self.nodes[&pair[0]]
+                    .edges
+                    .iter()
+                    .find(|e| self.edges[e].other_node(pair[0]) == pair[1])
+                    .unwrap(),
+            );
+        }
+        edges
+    }
+
+    fn remove_edge(&mut self, e: EdgeID) {
+        let edge = self.edges.remove(&e).unwrap();
+        for n in [edge.node1, edge.node2] {
+            assert!(self.nodes.get_mut(&n).unwrap().edges.remove(&e));
+        }
+    }
+}
+
+fn average(pts: Vec<Point>) -> Point {
+    // TODO Centroid?
+    let mut x = 0.0;
+    let mut y = 0.0;
+    let n = pts.len() as f64;
+    for pt in pts {
+        x += pt.x();
+        y += pt.y();
+    }
+    Point::new(x / n, y / n)
 }

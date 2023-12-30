@@ -64,7 +64,8 @@
 </script>
 
 {#key $mode}
-  <svg use:panZoom> <!-- TODO breaks GraphMode.   on:click={() => setFocus(null)}> -->
+  <svg use:panZoom>
+    <!-- TODO breaks GraphMode.   on:click={() => setFocus(null)}> -->
     {#if $mode.mode != "graph"}
       {#each roads as f}
         {#if $showRealRoadWidth && f.properties.polygon}
