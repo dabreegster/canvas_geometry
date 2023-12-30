@@ -1,9 +1,10 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, BinaryHeap};
 
-use geo::{LineString, Point};
+use geo::{LineString, Point, EuclideanLength};
 use serde::Serialize;
 
 use crate::{Intersection, IntersectionID, Road, RoadID};
+use crate::priority_queue::PriorityQueueItem;
 
 /// Much more mutable than a MapModel, but refers back to original roads and intersections.
 #[derive(Serialize)]
@@ -27,6 +28,18 @@ struct Edge {
 
     linestring: LineString,
     roads: HashSet<RoadID>,
+}
+
+impl Edge {
+    fn other_node(&self, n: NodeID) -> NodeID {
+        // TODO Loops
+        if self.node1 == n {
+            self.node2
+        } else {
+            assert_eq!(self.node2, n);
+            self.node1
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -100,5 +113,74 @@ impl Graph {
 
     pub fn render(&self) -> String {
         serde_json::to_string(self).unwrap()
+    }
+
+    pub fn trace_graph_loop(&mut self, node: usize) {
+        // Find a loop on this node
+        let Some(nodes) = self.pathfind(NodeID(node), NodeID(node)) else {
+            info!("no loop");
+            return;
+        };
+        info!("Got path {:?}", nodes);
+        // For all the nodes in there, calculate the centroid
+        // Remove all the edges in the path
+        // Remove all the nodes in the path. Create a new one with the centroid and preserving all
+        // the old edges.
+    }
+
+    fn pathfind(&self, node1: NodeID, node2: NodeID) -> Option<Vec<NodeID>> {
+        // Offline without petgraph...
+        let mut queue: BinaryHeap<PriorityQueueItem<usize, NodeID>> = BinaryHeap::new();
+        queue.push(PriorityQueueItem {
+            cost: 0,
+            value: node1,
+        });
+
+        let mut visited: HashSet<NodeID> = HashSet::new();
+        let mut backref: HashMap<NodeID, NodeID> = HashMap::new();
+        while let Some(current) = queue.pop() {
+            // Careful with the conditions here, so node1 == node2 works
+            if current.value == node2 && !backref.is_empty() {
+                info!("Found a path");
+                let mut path = Vec::new();
+                let mut at = current.value;
+                loop {
+                    path.push(at);
+                    at = backref[&at];
+                    if at == node1 {
+                        path.push(at);
+                        path.reverse();
+                        assert_eq!(path[0], node1);
+                        assert_eq!(*path.last().unwrap(), node2);
+
+                        // TODO Hack to make progress
+                        if path.len() > 3 {
+                            return Some(path);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+            if visited.contains(&current.value) {
+                continue;
+            }
+            visited.insert(current.value);
+
+            for edge in &self.nodes[&current.value].edges {
+                let edge = &self.edges[edge];
+                // Quick rounding for Ordness
+                let cost = current.cost + (edge.linestring.euclidean_length() * 100.0) as usize;
+                let next = edge.other_node(current.value);
+                //info!("get from {:?} to {:?} for total cost {}", current.value, next, cost);
+                queue.push(PriorityQueueItem {
+                    cost,
+                    value: next,
+                });
+                backref.insert(next, current.value);
+            }
+        }
+
+        None
     }
 }

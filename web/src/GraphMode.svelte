@@ -3,9 +3,12 @@
   import SplitComponent from "./SplitComponent.svelte";
   import { map, mode } from "./stores";
 
-  $: out = JSON.parse($map!.renderGraph());
+  let out = JSON.parse($map!.renderGraph());
 
-  function traceLoop(node: number) {}
+  function traceLoop(node: number) {
+    $map!.traceGraphLoop(node);
+    out = JSON.parse($map!.renderGraph());
+  }
 </script>
 
 <SplitComponent>
@@ -25,7 +28,9 @@
         cy={node.point.y}
         r="1"
         on:click={() => traceLoop(node.id)}
-      />
+      >
+      <title>{node.id}</title>
+  </circle>
     {/each}
   </g>
 </SplitComponent>
