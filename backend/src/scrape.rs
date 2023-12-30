@@ -4,6 +4,7 @@ use anyhow::Result;
 use geo::{Coord, Geometry, GeometryCollection, LineString, Point, Polygon};
 use osm_reader::{Element, NodeID, OsmID, WayID};
 
+use crate::graph::Graph;
 use crate::mercator::Mercator;
 use crate::{Building, Intersection, IntersectionID, MapModel, Road, RoadID};
 
@@ -69,11 +70,13 @@ pub fn scrape_osm(input_bytes: &[u8]) -> Result<MapModel> {
         mercator.to_mercator_in_place(&mut b.polygon);
     }
 
+    let graph = Graph::new_from_map(&roads, &intersections);
     let mut map = MapModel {
         mercator,
         roads,
         intersections,
         buildings,
+        graph,
     };
     crate::find_road_width::find_all(&mut map);
     Ok(map)
@@ -131,6 +134,8 @@ fn split_edges(
                     way: way.id,
                     node1,
                     node2: node,
+                    src_i: node_to_intersection[&node1],
+                    dst_i: node_to_intersection[&node],
                     linestring: LineString::new(std::mem::take(&mut pts)),
                     tags: way.tags.clone(),
 

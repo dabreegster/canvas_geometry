@@ -2,6 +2,9 @@ use geojson::{Feature, Geometry};
 
 use crate::{Building, Intersection, Road};
 
+// TODO All of this is totally pointless; just serde serialize all of mapmodel. GJ is not useful
+// for SVG rendering.
+
 impl Road {
     pub fn to_geojson(&self) -> Feature {
         let mut f = Feature::from(Geometry::from(&self.linestring));

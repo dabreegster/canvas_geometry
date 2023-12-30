@@ -2,6 +2,7 @@
   import Canvas from "./Canvas.svelte";
   import ExampleLoader from "./ExampleLoader.svelte";
   import FindRoadWidth from "./FindRoadWidth.svelte";
+  import GraphMode from "./GraphMode.svelte";
   import IntersectionGeometry from "./IntersectionGeometry.svelte";
   import Layout from "./Layout.svelte";
   import Neutral from "./Neutral.svelte";
@@ -23,12 +24,17 @@
 <Layout>
   <div slot="left">
     <ExampleLoader />
-    <div>
-      <label>
-        <input type="checkbox" bind:checked={$showRealRoadWidth} /> Show calculated
-        road widths
-      </label>
-    </div>
+    {#if $mode.mode != "graph"}
+      <div>
+        <button on:click={() => ($mode = { mode: "graph" })}>Graph mode</button>
+      </div>
+      <div>
+        <label>
+          <input type="checkbox" bind:checked={$showRealRoadWidth} /> Show calculated
+          road widths
+        </label>
+      </div>
+    {/if}
     <div bind:this={sidebarDiv} />
   </div>
   <div slot="main" style="position:relative; width: 100%; height: 100vh;">
@@ -45,4 +51,6 @@
   <FindRoadWidth />
 {:else if $mode.mode == "intersection-geometry"}
   <IntersectionGeometry />
+{:else if $mode.mode == "graph"}
+  <GraphMode />
 {/if}

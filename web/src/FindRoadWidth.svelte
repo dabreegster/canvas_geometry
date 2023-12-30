@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { lineToSvg, polygonToSvg, linestringToSvg } from "./math";
+  import { linestringToSvg, lineToSvg, polygonToSvg } from "./math";
   import SplitComponent from "./SplitComponent.svelte";
   import { map, mode } from "./stores";
 
@@ -27,9 +27,7 @@
       {/if}
     {/each}
 
-    <polygon
-      points={polygonToSvg(out.buffered_polygon)}
-    />
+    <polygon points={polygonToSvg(out.buffered_polygon)} />
 
     {#each out.parallel_roads as pair}
       <polyline points={linestringToSvg(pair[0])}>
@@ -66,7 +64,7 @@
 
   polyline {
     stroke: orange;
-    stroke-width: 2.0;
+    stroke-width: 2;
     stroke-opacity: 0.5;
   }
 </style>

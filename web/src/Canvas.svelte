@@ -64,32 +64,34 @@
 </script>
 
 {#key $mode}
-  <svg use:panZoom on:click={() => setFocus(null)}>
-    {#each roads as f}
-      {#if $showRealRoadWidth && f.properties.polygon}
-        <polygon
-          points={polygonToSvg(JSON.parse(f.properties.polygon))}
+  <svg use:panZoom> <!-- TODO breaks GraphMode.   on:click={() => setFocus(null)}> -->
+    {#if $mode.mode != "graph"}
+      {#each roads as f}
+        {#if $showRealRoadWidth && f.properties.polygon}
+          <polygon
+            points={polygonToSvg(JSON.parse(f.properties.polygon))}
+            on:click={() => setFocus(f)}
+            class="road-outline"
+            class:clicked={$clickedFeature == f}
+          />
+        {:else}
+          <polyline
+            points={gjToSvg(f.geometry.coordinates)}
+            on:click={() => setFocus(f)}
+            class:clicked={$clickedFeature == f}
+          />
+        {/if}
+      {/each}
+      {#each intersections as f}
+        <circle
+          cx={f.geometry.coordinates[0]}
+          cy={f.geometry.coordinates[1]}
+          r="1"
           on:click={() => setFocus(f)}
-          class="road-outline"
           class:clicked={$clickedFeature == f}
         />
-      {:else}
-        <polyline
-          points={gjToSvg(f.geometry.coordinates)}
-          on:click={() => setFocus(f)}
-          class:clicked={$clickedFeature == f}
-        />
-      {/if}
-    {/each}
-    {#each intersections as f}
-      <circle
-        cx={f.geometry.coordinates[0]}
-        cy={f.geometry.coordinates[1]}
-        r="1"
-        on:click={() => setFocus(f)}
-        class:clicked={$clickedFeature == f}
-      />
-    {/each}
+      {/each}
+    {/if}
     {#each buildings as f}
       <polygon
         points={gjToSvg(f.geometry.coordinates[0])}

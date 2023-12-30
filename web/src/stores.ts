@@ -13,7 +13,8 @@ export type Mode =
   | {
       mode: "intersection-polygon";
       intersection: any;
-    };
+    }
+  | { mode: "graph" };
 
 export let map: Writable<MapModel | null> = writable(null);
 export let mode: Writable<Mode> = writable({ mode: "neutral" });

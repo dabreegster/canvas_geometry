@@ -6,9 +6,11 @@ use std::sync::Once;
 
 use geo::{LineString, Point, Polygon};
 use geojson::GeoJson;
+use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
 mod find_road_width;
+mod graph;
 mod intersection_geometry;
 mod math;
 mod mercator;
@@ -24,18 +26,23 @@ pub struct MapModel {
     roads: Vec<Road>,
     intersections: Vec<Intersection>,
     buildings: Vec<Building>,
+
+    // TODO Weird to embed like this, but easier to prototype
+    graph: graph::Graph,
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct RoadID(pub usize);
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct IntersectionID(pub usize);
 
-struct Road {
+pub struct Road {
     id: RoadID,
     way: osm_reader::WayID,
     node1: osm_reader::NodeID,
     node2: osm_reader::NodeID,
+    src_i: IntersectionID,
+    dst_i: IntersectionID,
     linestring: LineString,
     tags: HashMap<String, String>,
 
@@ -45,7 +52,7 @@ struct Road {
     polygon: Option<Polygon>,
 }
 
-struct Intersection {
+pub struct Intersection {
     id: IntersectionID,
     node: osm_reader::NodeID,
     point: Point,
@@ -104,6 +111,11 @@ impl MapModel {
         let obj = intersection_geometry::find_intersection_geometry(self, IntersectionID(i));
         let out = serde_json::to_string(&obj).map_err(err_to_js)?;
         Ok(out)
+    }
+
+    #[wasm_bindgen(js_name = renderGraph)]
+    pub fn render_graph(&self) -> String {
+        self.graph.render()
     }
 }
 
