@@ -1,9 +1,8 @@
-use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 
-use geo::{EuclideanLength, LineString, Point};
+use geo::{LineString, Point};
 use serde::Serialize;
 
-use crate::priority_queue::PriorityQueueItem;
 use crate::{Intersection, IntersectionID, Road, RoadID};
 
 /// Much more mutable than a MapModel, but refers back to original roads and intersections.
@@ -117,7 +116,7 @@ impl Graph {
 
     pub fn trace_graph_loop(&mut self, node: usize) {
         // Find a loop on this node
-        let Some(nodes) = self.pathfind(NodeID(node), NodeID(node)) else {
+        let Some(nodes) = self.find_cycle(NodeID(node)) else {
             info!("no loop");
             return;
         };
@@ -128,60 +127,36 @@ impl Graph {
         // the old edges.
     }
 
-    fn pathfind(&self, node1: NodeID, node2: NodeID) -> Option<Vec<NodeID>> {
-        // Offline without petgraph...
-        let mut queue: BinaryHeap<PriorityQueueItem<usize, NodeID>> = BinaryHeap::new();
-        queue.push(PriorityQueueItem {
-            cost: 0,
-            value: node1,
-            num_steps: 0,
-        });
+    fn find_cycle(&self, on_node: NodeID) -> Option<Vec<NodeID>> {
+        // Offline, this is an awful approach, but I want to move on
+        let mut queue: Vec<Vec<NodeID>> = Vec::new();
+        queue.push(vec![on_node]);
 
-        // TODO Or also check what edges we visit...
-        let mut visited: HashSet<NodeID> = HashSet::new();
-        let mut backref: HashMap<NodeID, NodeID> = HashMap::new();
-        while let Some(current) = queue.pop() {
-            // Careful with the conditions here, so node1 == node2 works
-            if current.value == node2 && current.num_steps > 2 {
-                info!("Found a path");
-                let mut path = Vec::new();
-                let mut at = current.value;
-                loop {
-                    path.push(at);
-                    at = backref[&at];
-                    if at == node1 {
-                        path.push(at);
-                        path.reverse();
-                        assert_eq!(path[0], node1);
-                        assert_eq!(*path.last().unwrap(), node2);
-                        return Some(path);
-                    }
-                }
+        while let Some(current_path) = queue.pop() {
+            let last_node = *current_path.last().unwrap();
+            if current_path.len() > 2 && last_node == on_node {
+                return Some(current_path);
             }
-            info!("Already been to {:?}, skip", current.value);
-            if visited.contains(&current.value) {
+
+            // Limit length
+            if current_path.len() > 6 {
                 continue;
             }
-            visited.insert(current.value);
 
-            for edge in &self.nodes[&current.value].edges {
-                let edge = &self.edges[edge];
-                // Quick rounding for Ordness
-                let cost = current.cost + (edge.linestring.euclidean_length() * 100.0) as usize;
-                let next = edge.other_node(current.value);
-                info!(
-                    "get from {:?} to {:?} for total cost {}. {} steps",
-                    current.value,
-                    next,
-                    cost,
-                    current.num_steps + 1
-                );
-                queue.push(PriorityQueueItem {
-                    cost,
-                    value: next,
-                    num_steps: current.num_steps + 1,
-                });
-                backref.insert(next, current.value);
+            for edge in &self.nodes[&last_node].edges {
+                let next_node = self.edges[edge].other_node(last_node);
+                // Don't double-back
+                if current_path.contains(&next_node) {
+                    // Unless we found the loop
+                    if next_node == on_node && current_path.len() > 2 {
+                        // Let it go
+                    } else {
+                        continue;
+                    }
+                }
+                let mut new_path = current_path.clone();
+                new_path.push(next_node);
+                queue.push(new_path);
             }
         }
 

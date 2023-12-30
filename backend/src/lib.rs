@@ -15,7 +15,6 @@ mod intersection_geometry;
 mod math;
 mod mercator;
 mod output;
-mod priority_queue;
 mod scrape;
 
 static START: Once = Once::new();
