@@ -128,11 +128,13 @@ impl Graph {
 
         // Remove the edges in this loop
         for e in self.nodes_to_edges(&nodes) {
+            info!("Removing {:?}", e);
             self.remove_edge(e);
         }
 
         // Remove all the old nodes, create one new one
         let mut intersections = HashSet::new();
+        let mut surviving_edges = HashSet::new();
         for n in nodes.into_iter().skip(1) {
             let old_node = self.nodes.remove(&n).unwrap();
             intersections.extend(old_node.intersections);
@@ -140,13 +142,26 @@ impl Graph {
             // For any edge connected to the old node, connect it instead to our new merged node,
             // fixing up the geometry
             for e in old_node.edges {
+                info!("fix up surviving edge {:?}", e);
                 let fix_edge = self.edges.get_mut(&e).unwrap();
+                surviving_edges.insert(e);
                 if fix_edge.node1 == old_node.id {
                     fix_edge.node1 = new_node;
-                    fix_edge.linestring.0.insert(0, centroid.into());
+                    // TODO Not sure yet. Easier to see without the old geometry.
+                    //fix_edge.linestring.0.insert(0, centroid.into());
+                    fix_edge.linestring.0[0] = centroid.into();
                 } else {
                     fix_edge.node2 = new_node;
+                    //fix_edge.linestring.0.push(centroid.into());
+                    fix_edge.linestring.0.pop();
                     fix_edge.linestring.0.push(centroid.into());
+                }
+
+                // It becomes a loop; totally nuke it
+                if fix_edge.node1 == fix_edge.node2 {
+                    info!("edge became degenerate, removing {:?}", fix_edge.id);
+                    self.edges.remove(&e).unwrap();
+                    surviving_edges.remove(&e);
                 }
             }
         }
@@ -154,7 +169,7 @@ impl Graph {
             new_node,
             Node {
                 id: new_node,
-                edges: HashSet::new(),
+                edges: surviving_edges,
 
                 point: centroid,
                 intersections,
@@ -193,6 +208,9 @@ impl Graph {
                 new_path.push(next_node);
                 queue.push(new_path);
             }
+
+            // Prefer short paths. TODO So brute-force and temporary.
+            queue.sort_by_key(|path| path.len());
         }
 
         None
