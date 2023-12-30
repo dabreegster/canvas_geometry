@@ -6,6 +6,7 @@ use std::cmp::Ordering;
 pub struct PriorityQueueItem<K, V> {
     pub cost: K,
     pub value: V,
+    pub num_steps: usize,
 }
 
 impl<K: Ord, V: Ord> PartialOrd for PriorityQueueItem<K, V> {

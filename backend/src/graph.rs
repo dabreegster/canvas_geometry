@@ -1,10 +1,10 @@
-use std::collections::{HashMap, HashSet, BinaryHeap};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 
-use geo::{LineString, Point, EuclideanLength};
+use geo::{EuclideanLength, LineString, Point};
 use serde::Serialize;
 
-use crate::{Intersection, IntersectionID, Road, RoadID};
 use crate::priority_queue::PriorityQueueItem;
+use crate::{Intersection, IntersectionID, Road, RoadID};
 
 /// Much more mutable than a MapModel, but refers back to original roads and intersections.
 #[derive(Serialize)]
@@ -134,13 +134,15 @@ impl Graph {
         queue.push(PriorityQueueItem {
             cost: 0,
             value: node1,
+            num_steps: 0,
         });
 
+        // TODO Or also check what edges we visit...
         let mut visited: HashSet<NodeID> = HashSet::new();
         let mut backref: HashMap<NodeID, NodeID> = HashMap::new();
         while let Some(current) = queue.pop() {
             // Careful with the conditions here, so node1 == node2 works
-            if current.value == node2 && !backref.is_empty() {
+            if current.value == node2 && current.num_steps > 2 {
                 info!("Found a path");
                 let mut path = Vec::new();
                 let mut at = current.value;
@@ -152,16 +154,11 @@ impl Graph {
                         path.reverse();
                         assert_eq!(path[0], node1);
                         assert_eq!(*path.last().unwrap(), node2);
-
-                        // TODO Hack to make progress
-                        if path.len() > 3 {
-                            return Some(path);
-                        } else {
-                            break;
-                        }
+                        return Some(path);
                     }
                 }
             }
+            info!("Already been to {:?}, skip", current.value);
             if visited.contains(&current.value) {
                 continue;
             }
@@ -172,10 +169,17 @@ impl Graph {
                 // Quick rounding for Ordness
                 let cost = current.cost + (edge.linestring.euclidean_length() * 100.0) as usize;
                 let next = edge.other_node(current.value);
-                //info!("get from {:?} to {:?} for total cost {}", current.value, next, cost);
+                info!(
+                    "get from {:?} to {:?} for total cost {}. {} steps",
+                    current.value,
+                    next,
+                    cost,
+                    current.num_steps + 1
+                );
                 queue.push(PriorityQueueItem {
                     cost,
                     value: next,
+                    num_steps: current.num_steps + 1,
                 });
                 backref.insert(next, current.value);
             }

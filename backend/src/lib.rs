@@ -119,7 +119,7 @@ impl MapModel {
     pub fn render_graph(&self) -> String {
         self.graph.render()
     }
-    
+
     #[wasm_bindgen(js_name = traceGraphLoop)]
     pub fn trace_graph_loop(&mut self, node: usize) {
         self.graph.trace_graph_loop(node)
