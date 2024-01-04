@@ -16,6 +16,8 @@
       let resp = await fetch(`/${example}/input.osm`, {
         method: "HEAD",
       });
+      useLocalVite = resp.ok;
+      console.log("Using local cache");
 
       // For quicker dev
       loadExample();
@@ -23,8 +25,9 @@
   });
 
   async function loadExample() {
-    // TODO Depending on useLocalVite
-    let url = `/${example}/input.osm`;
+    let url = useLocalVite
+      ? `/${example}/input.osm`
+      : `https://raw.githubusercontent.com/a-b-street/osm2streets/main/tests/src/${example}/input.osm`;
     try {
       loading = true;
       let resp = await fetch(url);
@@ -58,7 +61,7 @@
     "bristol_sausage_links",
     "cycleway_rejoin_road",
     "degenerate_bug",
-    "frederiksted",
+    //"frederiksted",
     "fremantle_placement",
     "i5_exit_ramp",
     "kingsway_junction",
