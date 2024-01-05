@@ -4,9 +4,10 @@
   import { map, mode } from "./stores";
 
   let out = JSON.parse($map!.renderGraph());
+  let keepLastPoint = false;
 
   function traceLoop(node: number) {
-    $map!.traceGraphLoop(node);
+    $map!.traceGraphLoop(node, keepLastPoint);
     out = JSON.parse($map!.renderGraph());
   }
 
@@ -24,6 +25,9 @@
     </div>
     <div>
       <button on:click={undo}>Undo</button>
+    </div>
+    <div>
+    <input type="checkbox" bind:checked={keepLastPoint} />Keep last point
     </div>
   </div>
   <g slot="map">

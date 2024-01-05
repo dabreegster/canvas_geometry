@@ -121,9 +121,9 @@ impl MapModel {
     }
 
     #[wasm_bindgen(js_name = traceGraphLoop)]
-    pub fn trace_graph_loop(&mut self, node: usize) {
+    pub fn trace_graph_loop(&mut self, node: usize, keep_last_point: bool) {
         self.graph_undo_stack.push(self.graph.clone());
-        self.graph.trace_graph_loop(node)
+        self.graph.trace_graph_loop(node, keep_last_point)
     }
 
     #[wasm_bindgen(js_name = undoGraph)]

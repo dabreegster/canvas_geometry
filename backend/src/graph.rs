@@ -114,7 +114,7 @@ impl Graph {
         serde_json::to_string(self).unwrap()
     }
 
-    pub fn trace_graph_loop(&mut self, node: usize) {
+    pub fn trace_graph_loop(&mut self, node: usize, keep_last_point: bool) {
         // Find a loop on this node
         let Some(nodes) = self.find_cycle(NodeID(node)) else {
             info!("no loop");
@@ -145,16 +145,22 @@ impl Graph {
                 info!("fix up surviving edge {:?}", e);
                 let fix_edge = self.edges.get_mut(&e).unwrap();
                 surviving_edges.insert(e);
+
                 if fix_edge.node1 == old_node.id {
                     fix_edge.node1 = new_node;
-                    // TODO Not sure yet. Easier to see without the old geometry.
-                    //fix_edge.linestring.0.insert(0, centroid.into());
-                    fix_edge.linestring.0[0] = centroid.into();
+                    if keep_last_point {
+                        fix_edge.linestring.0.insert(0, centroid.into());
+                    } else {
+                        fix_edge.linestring.0[0] = centroid.into();
+                    }
                 } else {
                     fix_edge.node2 = new_node;
-                    //fix_edge.linestring.0.push(centroid.into());
-                    fix_edge.linestring.0.pop();
-                    fix_edge.linestring.0.push(centroid.into());
+                    if keep_last_point {
+                        fix_edge.linestring.0.push(centroid.into());
+                    } else {
+                        fix_edge.linestring.0.pop();
+                        fix_edge.linestring.0.push(centroid.into());
+                    }
                 }
 
                 // It becomes a loop; totally nuke it
