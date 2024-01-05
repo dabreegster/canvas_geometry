@@ -56,7 +56,9 @@
     stroke-width: 1;
   }
   polyline:hover {
+    /* Because there's no z-indexing... */
     stroke: blue;
+    stroke-width: 1.5;
   }
 
   circle {

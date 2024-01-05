@@ -148,6 +148,8 @@ impl Graph {
 
                 if fix_edge.node1 == old_node.id {
                     fix_edge.node1 = new_node;
+                    // TODO If that last point is a fake centroid from a previous round, it'll look
+                    // odd
                     if keep_last_point {
                         fix_edge.linestring.0.insert(0, centroid.into());
                     } else {
