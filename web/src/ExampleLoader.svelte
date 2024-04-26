@@ -1,12 +1,12 @@
 <script lang="ts">
   import init, { MapModel } from "backend";
   import { onMount } from "svelte";
-  import Loading from "./Loading.svelte";
+  import { Loading } from "svelte-utils";
   import { map } from "./stores";
 
   let example = "st_georges_cycletrack";
   let useLocalVite = false;
-  let loading = false;
+  let loading = "";
 
   onMount(async () => {
     await init();
@@ -29,7 +29,7 @@
       ? `/${example}/input.osm`
       : `https://raw.githubusercontent.com/a-b-street/osm2streets/main/tests/src/${example}/input.osm`;
     try {
-      loading = true;
+      loading = `Loading ${url}`;
       let resp = await fetch(url);
       let buffer = await resp.arrayBuffer();
       $map = new MapModel(new Uint8Array(buffer));
@@ -37,20 +37,20 @@
     } catch (err) {
       window.alert(`Couldn't open from URL ${url}: ${err}`);
     }
-    loading = false;
+    loading = "";
   }
 
   let fileInput: HTMLInputElement;
   async function loadFile(e: Event) {
     try {
-      loading = true;
+      loading = "Loading file";
       let buffer = await fileInput.files![0].arrayBuffer();
       $map = new MapModel(new Uint8Array(buffer));
       example = "";
     } catch (err) {
       window.alert(`Couldn't open this file: ${err}`);
     }
-    loading = false;
+    loading = "";
   }
 
   let examples = [

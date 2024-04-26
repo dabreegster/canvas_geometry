@@ -27,7 +27,7 @@
       <button on:click={undo}>Undo</button>
     </div>
     <div>
-    <input type="checkbox" bind:checked={keepLastPoint} />Keep last point
+      <input type="checkbox" bind:checked={keepLastPoint} />Keep last point
     </div>
   </div>
   <g slot="map">
