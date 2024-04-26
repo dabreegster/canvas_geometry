@@ -7,13 +7,13 @@ use std::sync::Once;
 use geo::{LineString, Point, Polygon};
 use geojson::GeoJson;
 use serde::Serialize;
+use utils::Mercator;
 use wasm_bindgen::prelude::*;
 
 mod find_road_width;
 mod graph;
 mod intersection_geometry;
 mod math;
-mod mercator;
 mod output;
 mod scrape;
 
@@ -22,7 +22,7 @@ static START: Once = Once::new();
 #[wasm_bindgen]
 pub struct MapModel {
     #[allow(unused)]
-    mercator: mercator::Mercator,
+    mercator: Mercator,
     roads: Vec<Road>,
     intersections: Vec<Intersection>,
     buildings: Vec<Building>,

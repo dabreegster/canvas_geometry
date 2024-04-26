@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use anyhow::Result;
 use geo::{Coord, Geometry, GeometryCollection, LineString, Point, Polygon};
 use osm_reader::{Element, NodeID, OsmID, WayID};
+use utils::Mercator;
 
 use crate::graph::Graph;
-use crate::mercator::Mercator;
 use crate::{Building, Intersection, IntersectionID, MapModel, Road, RoadID};
 
 struct Way {
