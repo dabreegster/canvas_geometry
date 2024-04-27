@@ -1,13 +1,12 @@
 #[macro_use]
 extern crate log;
 
-use std::collections::HashMap;
 use std::sync::Once;
 
 use geo::{LineString, Point, Polygon};
 use geojson::GeoJson;
 use serde::Serialize;
-use utils::Mercator;
+use utils::{Mercator, Tags};
 use wasm_bindgen::prelude::*;
 
 mod find_road_width;
@@ -45,7 +44,7 @@ pub struct Road {
     src_i: IntersectionID,
     dst_i: IntersectionID,
     linestring: LineString,
-    tags: HashMap<String, String>,
+    tags: Tags,
 
     // Derived a bit later
     max_left_width: Option<f64>,
@@ -63,7 +62,7 @@ pub struct Intersection {
 struct Building {
     id: osm_reader::OsmID,
     polygon: Polygon,
-    tags: HashMap<String, String>,
+    tags: Tags,
 }
 
 #[wasm_bindgen]
